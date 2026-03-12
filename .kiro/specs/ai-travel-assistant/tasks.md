@@ -60,36 +60,36 @@
     - **属性 37: 时间戳自动记录**
     - **验证需求: 1.7, 4.2, 6.2, 6.8, 8.4, 8.5, 8.8**
 
-- [ ] 3. 检查点 - 数据库层验证
+- [x] 3. 检查点 - 数据库层验证
   - 确保所有Schema定义正确，索引配置完成
   - 验证数据验证规则工作正常
   - 如有问题请向用户询问
 
-- [ ] 4. 后端认证系统实现
-  - [ ] 4.1 实现密码加密工具
+- [x] 4. 后端认证系统实现
+  - [x] 4.1 实现密码加密工具
     - 使用bcrypt实现hashPassword和comparePassword函数
     - 配置SALT_ROUNDS = 10
     - _需求: 3.6_
 
-  - [ ] 4.2 实现JWT工具
+  - [x] 4.2 实现JWT工具
     - 实现generateToken函数（24小时过期）
     - 实现verifyToken函数
     - _需求: 3.5, 3.8_
 
-  - [ ] 4.3 实现认证中间件
+  - [x] 4.3 实现认证中间件
     - 创建authenticate中间件（必须登录）
     - 创建optionalAuth中间件（可选登录）
     - 处理token验证和错误响应
     - _需求: 3.9_
 
-  - [ ] 4.4 实现UserService
+  - [x] 4.4 实现UserService
     - 实现register方法（邮箱唯一性检查、密码加密）
     - 实现login方法（凭证验证、token生成）
     - 实现getProfile方法
     - 实现updateProfile方法（禁止修改邮箱）
     - _需求: 3.1, 3.2, 3.3, 3.4, 3.5, 4.1, 4.2, 4.3, 4.4_
 
-  - [ ] 4.5 实现认证API端点
+  - [x] 4.5 实现认证API端点
     - POST /api/auth/register - 用户注册
     - POST /api/auth/login - 用户登录
     - POST /api/auth/logout - 用户登出

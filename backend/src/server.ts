@@ -61,8 +61,13 @@ app.get('/api', (_req, res) => {
 // Apply rate limiting to API routes
 app.use('/api', apiLimiter);
 
-// TODO: Add API routes here
-// app.use('/api/auth', authRoutes);
+// Import routes
+import authRoutes from './routes/authRoutes.js';
+
+// API routes
+app.use('/api/auth', authRoutes);
+
+// TODO: Add remaining API routes
 // app.use('/api/users', userRoutes);
 // app.use('/api/chat', chatRoutes);
 // app.use('/api/itineraries', itineraryRoutes);
