@@ -644,15 +644,15 @@
     - 测试跨浏览器兼容性
     - _需求: 所有功能_
 
-- [ ] 29. 部署准备和配置
-  - [ ] 29.1 创建Docker配置
+- [x] 29. 部署准备和配置
+  - [x] 29.1 创建Docker配置
     - 编写后端Dockerfile（Node.js 18-alpine）
     - 编写前端Dockerfile（多阶段构建，nginx）
     - 编写docker-compose.yml（MongoDB, Backend, Frontend）
     - 配置环境变量
     - _需求: 部署架构_
 
-  - [ ] 29.2 配置生产环境
+  - [x] 29.2 配置生产环境
     - 创建.env.production文件
     - 配置MongoDB连接（MongoDB Atlas）
     - 配置JWT密钥
@@ -660,14 +660,14 @@
     - 配置CORS和域名
     - _需求: 部署架构_
 
-  - [ ] 29.3 配置nginx
+  - [x] 29.3 配置nginx
     - 编写nginx.conf
     - 配置静态文件服务
     - 配置API代理
     - 配置HTTPS（可选）
     - _需求: 部署架构_
 
-  - [ ] 29.4 配置CI/CD（可选）
+  - [x] 29.4 配置CI/CD（可选）
     - 创建GitHub Actions工作流
     - 配置自动测试
     - 配置自动部署
