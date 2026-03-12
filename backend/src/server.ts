@@ -65,14 +65,15 @@ app.use('/api', apiLimiter);
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/ai.js';
+import destinationRoutes from './routes/destinationRoutes.js';
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', aiRoutes);
+app.use('/api/destinations', destinationRoutes);
 
 // TODO: Add remaining API routes
-// app.use('/api/destinations', destinationRoutes);
 // app.use('/api/collections', collectionRoutes);
 // app.use('/api/search', searchRoutes);
 

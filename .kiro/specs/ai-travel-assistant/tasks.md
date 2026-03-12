@@ -182,8 +182,8 @@
     - **属性 12: 预算约束不变性**
     - **验证需求: 1.1, 1.2, 1.3, 1.5, 1.6, 2.1, 2.2, 2.3, 2.4, 2.8**
 
-- [ ] 8. 后端目的地管理实现
-  - [ ] 8.1 实现DestinationService
+- [x] 8. 后端目的地管理实现
+  - [x] 8.1 实现DestinationService
     - 实现getDestinations方法（支持筛选和排序）
     - 实现getDestinationById方法
     - 实现getPopularDestinations方法
@@ -191,7 +191,7 @@
     - 实现updateDestination方法（管理员）
     - _需求: 6.1, 6.2, 6.3, 6.4, 6.5, 6.6, 6.7_
 
-  - [ ] 8.2 实现目的地API端点
+  - [x] 8.2 实现目的地API端点
     - GET /api/destinations - 获取目的地列表（支持筛选）
     - GET /api/destinations/:id - 获取目的地详情
     - GET /api/destinations/popular - 获取热门目的地
