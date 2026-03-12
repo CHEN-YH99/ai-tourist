@@ -1,19 +1,39 @@
 <template>
-  <div id="app">
-    <header>
-      <nav>
-        <h1>🌍 AI旅游攻略助手</h1>
-        <div class="nav-links">
-          <router-link to="/">首页</router-link>
-          <router-link to="/chat">AI问答</router-link>
+  <div id="app" class="flex flex-col min-h-screen bg-gray-50">
+    <Header />
+    <div class="flex flex-1 overflow-hidden">
+      <Sidebar />
+      <main class="flex-1 overflow-auto md:ml-64">
+        <div class="p-4 md:p-8">
+          <router-view />
         </div>
-      </nav>
-    </header>
-    <main>
-      <router-view />
-    </main>
+      </main>
+    </div>
+    <ToastContainer />
   </div>
 </template>
+
+<script setup lang="ts">
+import { onMounted } from 'vue'
+import { useToast } from '@/composables/useToast'
+import { setToastNotifier } from '@/api/client'
+import Header from '@/components/Header.vue'
+import Sidebar from '@/components/Sidebar.vue'
+import ToastContainer from '@/components/ToastContainer.vue'
+
+const { error, warning } = useToast()
+
+// Initialize toast notifier for API client
+onMounted(() => {
+  setToastNotifier((message: string, type: string, title?: string) => {
+    if (type === 'error') {
+      error(message, title)
+    } else if (type === 'warning') {
+      warning(message, title)
+    }
+  })
+})
+</script>
 
 <style>
 * {
@@ -25,42 +45,5 @@
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #f5f7fa;
-}
-
-header {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  padding: 1rem 2rem;
-  box-shadow: 0 2px 8px rgba(0,0,0,0.1);
-}
-
-nav {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  max-width: 1200px;
-  margin: 0 auto;
-}
-
-.nav-links {
-  display: flex;
-  gap: 2rem;
-}
-
-.nav-links a {
-  color: white;
-  text-decoration: none;
-  font-weight: 500;
-  transition: opacity 0.3s;
-}
-
-.nav-links a:hover {
-  opacity: 0.8;
-}
-
-main {
-  max-width: 1200px;
-  margin: 2rem auto;
-  padding: 0 2rem;
 }
 </style>

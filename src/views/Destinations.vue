@@ -76,11 +76,8 @@
     </div>
 
     <!-- Loading State -->
-    <div v-if="destinationStore.loading" class="flex justify-center items-center py-12">
-      <div class="text-center">
-        <div class="inline-block w-8 h-8 border-4 border-blue-200 border-t-blue-600 rounded-full animate-spin mb-4" />
-        <p class="text-gray-600">加载中...</p>
-      </div>
+    <div v-if="destinationStore.loading" class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6 mb-8">
+      <SkeletonLoader type="card" :count="6" />
     </div>
 
     <!-- Destinations Grid -->
@@ -160,6 +157,7 @@ import type { Destination, DestinationFilters } from '@/types'
 import { useDestinationStore } from '@/stores/destination'
 import DestinationCard from '@/components/DestinationCard.vue'
 import DestinationDetail from '@/components/DestinationDetail.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
 import Button from '@/components/ui/Button.vue'
 
 const router = useRouter()
