@@ -206,15 +206,15 @@
     - **属性 28: 目的地必填字段验证**
     - **验证需求: 1.2, 6.4, 6.5**
 
-- [ ] 9. 后端收藏功能实现
-  - [ ] 9.1 实现CollectionService
+- [x] 9. 后端收藏功能实现
+  - [x] 9.1 实现CollectionService
     - 实现addToCollection方法（幂等性处理）
     - 实现removeFromCollection方法
     - 实现getUserCollections方法（支持类型筛选、倒序）
     - 实现isCollected方法
     - _需求: 5.1, 5.2, 5.3, 5.4, 5.5, 5.6, 5.7_
 
-  - [ ] 9.2 实现收藏API端点
+  - [x] 9.2 实现收藏API端点
     - GET /api/collections - 获取收藏列表（支持类型筛选）
     - POST /api/collections - 添加收藏
     - DELETE /api/collections/:id - 移除收藏
@@ -229,14 +229,14 @@
     - **属性 25: 未登录用户收藏限制**
     - **验证需求: 5.1, 5.2, 5.3, 5.4, 5.6, 5.7, 5.8**
 
-- [ ] 10. 检查点 - 后端核心功能验证
+- [x] 10. 检查点 - 后端核心功能验证
   - 确保AI问答、攻略生成、目的地管理、收藏功能正常
   - 验证所有API端点响应正确
   - 测试错误处理和边界情况
   - 如有问题请向用户询问
 
-- [ ] 11. 后端搜索功能实现
-  - [ ] 11.1 实现SearchService
+- [x] 11. 后端搜索功能实现
+  - [x] 11.1 实现SearchService
     - 实现search方法（全局搜索，支持模糊匹配）
     - 实现searchDestinations方法
     - 实现searchItineraries方法（优先显示用户自己的）
@@ -245,7 +245,7 @@
     - 添加空白搜索词验证
     - _需求: 7.1, 7.2, 7.3, 7.4, 7.5, 7.6, 7.7, 7.8_
 
-  - [ ] 11.2 实现搜索API端点
+  - [x] 11.2 实现搜索API端点
     - GET /api/search - 全局搜索（支持类型筛选）
     - GET /api/search/destinations - 搜索目的地
     - GET /api/search/itineraries - 搜索攻略

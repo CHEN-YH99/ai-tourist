@@ -1,15 +1,21 @@
+import dotenv from 'dotenv';
+import path from 'path';
+import { fileURLToPath } from 'url';
+
+// Get __dirname equivalent in ES modules
+const __filename = fileURLToPath(import.meta.url);
+const __dirname = path.dirname(__filename);
+
+// Load environment variables FIRST before any other imports
+dotenv.config({ path: path.join(__dirname, '../.env') });
+
 import express, { Application, Request, Response } from 'express';
 import cors from 'cors';
 import helmet from 'helmet';
-import dotenv from 'dotenv';
-import path from 'path';
 import { connectDatabase } from './config/database.js';
 import { logger } from './utils/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
 import { apiLimiter } from './middleware/rateLimit.js';
-
-// Load environment variables
-dotenv.config();
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
@@ -66,16 +72,18 @@ import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
 import aiRoutes from './routes/ai.js';
 import destinationRoutes from './routes/destinationRoutes.js';
+import collectionRoutes from './routes/collectionRoutes.js';
+import searchRoutes from './routes/searchRoutes.js';
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
 app.use('/api', aiRoutes);
 app.use('/api/destinations', destinationRoutes);
+app.use('/api/collections', collectionRoutes);
+app.use('/api/search', searchRoutes);
 
 // TODO: Add remaining API routes
-// app.use('/api/collections', collectionRoutes);
-// app.use('/api/search', searchRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

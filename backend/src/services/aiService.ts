@@ -292,7 +292,8 @@ class AIService {
         setTimeout(() => reject(new Error('AI请求超时')), timeoutMs);
       });
 
-      const apiPromise = openai.chat.completions.create({
+      const client = openai();
+      const apiPromise = client.chat.completions.create({
         model: 'gpt-3.5-turbo',
         messages,
         temperature: 0.7,
