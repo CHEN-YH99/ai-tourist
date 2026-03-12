@@ -10,45 +10,45 @@ const __dirname = path.dirname(__filename);
 dotenv.config({ path: path.join(__dirname, '../.env') });
 
 import express, { Application, Request, Response } from 'express';
-import cors from 'cors';
 import helmet from 'helmet';
+import cors from 'cors';
 import { connectDatabase } from './config/database.js';
-import { logger } from './utils/logger.js';
+import { logger, accessLogger } from './utils/logger.js';
 import { errorHandler } from './middleware/errorHandler.js';
+import { responseFormatter } from './middleware/responseFormatter.js';
 import { apiLimiter } from './middleware/rateLimit.js';
+import { corsOptions } from './config/cors.js';
+import { helmetOptions } from './config/security.js';
 
 const app: Application = express();
 const PORT = process.env.PORT || 5000;
 
 // Security middleware
-app.use(helmet());
-app.use(
-  cors({
-    origin: process.env.CORS_ORIGIN || 'http://localhost:3000',
-    credentials: true,
-    methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS'],
-    allowedHeaders: ['Content-Type', 'Authorization'],
-  })
-);
+app.use(helmet(helmetOptions));
+app.use(cors(corsOptions));
 
 // Body parsing middleware
 app.use(express.json({ limit: '10mb' }));
 app.use(express.urlencoded({ extended: true, limit: '10mb' }));
 
+// Response formatter middleware (set Content-Type and standard format)
+app.use(responseFormatter);
+
 // Serve static files (uploads)
 app.use('/uploads', express.static(path.join(process.cwd(), 'uploads')));
 
-// Request logging middleware
+// Request logging middleware (access log)
 app.use((req: Request, res: Response, next) => {
   const start = Date.now();
   res.on('finish', () => {
     const duration = Date.now() - start;
-    logger.info({
+    accessLogger.info({
       method: req.method,
       path: req.path,
       status: res.statusCode,
       duration: `${duration}ms`,
       ip: req.ip,
+      timestamp: new Date().toISOString(),
     });
   });
   next();

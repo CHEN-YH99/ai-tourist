@@ -1,7 +1,14 @@
 import winston from 'winston';
+import DailyRotateFile from 'winston-daily-rotate-file';
 import path from 'path';
+import fs from 'fs';
 
 const logDir = 'logs';
+
+// Create logs directory if it doesn't exist
+if (!fs.existsSync(logDir)) {
+  fs.mkdirSync(logDir, { recursive: true });
+}
 
 // Define log format
 const logFormat = winston.format.combine(
@@ -36,22 +43,47 @@ export const logger = winston.createLogger({
   ]
 });
 
-// Add file transports in production
-if (process.env.NODE_ENV === 'production') {
-  logger.add(
-    new winston.transports.File({
-      filename: path.join(logDir, 'error.log'),
-      level: 'error',
-      maxsize: 100 * 1024 * 1024, // 100MB
-      maxFiles: 30
+// Add daily rotate file transports
+logger.add(
+  new DailyRotateFile({
+    filename: path.join(logDir, 'error-%DATE%.log'),
+    datePattern: 'YYYY-MM-DD',
+    level: 'error',
+    maxSize: '100m', // 100MB per file
+    maxFiles: '30d', // Keep 30 days of logs
+    format: logFormat
+  })
+);
+
+logger.add(
+  new DailyRotateFile({
+    filename: path.join(logDir, 'combined-%DATE%.log'),
+    datePattern: 'YYYY-MM-DD',
+    maxSize: '100m', // 100MB per file
+    maxFiles: '30d', // Keep 30 days of logs
+    format: logFormat
+  })
+);
+
+// Add access log transport (separate file for access logs)
+export const accessLogger = winston.createLogger({
+  format: logFormat,
+  transports: [
+    new DailyRotateFile({
+      filename: path.join(logDir, 'access-%DATE%.log'),
+      datePattern: 'YYYY-MM-DD',
+      maxSize: '100m',
+      maxFiles: '30d',
+      format: logFormat
     })
-  );
-  
-  logger.add(
-    new winston.transports.File({
-      filename: path.join(logDir, 'combined.log'),
-      maxsize: 100 * 1024 * 1024, // 100MB
-      maxFiles: 30
+  ]
+});
+
+// Only add console transport for access logger in development
+if (process.env.NODE_ENV !== 'production') {
+  accessLogger.add(
+    new winston.transports.Console({
+      format: consoleFormat
     })
   );
 }

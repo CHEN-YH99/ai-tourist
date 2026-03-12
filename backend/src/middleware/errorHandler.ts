@@ -19,13 +19,14 @@ export function errorHandler(
   res: Response,
   _next: NextFunction
 ) {
-  // Log error
+  // Log error with full details
   logger.error({
     message: err.message,
     stack: err.stack,
     path: req.path,
     method: req.method,
     timestamp: new Date().toISOString(),
+    errorType: err.name,
   });
 
   // Handle known operational errors
@@ -79,6 +80,14 @@ export function errorHandler(
     return res.status(401).json({
       status: 'error',
       message: '认证令牌已过期',
+    });
+  }
+
+  // Handle MongoDB connection errors
+  if (err.name === 'MongoNetworkError' || err.name === 'MongoServerError') {
+    return res.status(503).json({
+      status: 'error',
+      message: '数据库服务不可用',
     });
   }
 
