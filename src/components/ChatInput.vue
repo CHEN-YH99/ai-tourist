@@ -7,19 +7,22 @@
       :disabled="disabled"
       class="message-input"
     />
-    <button
+    <Button
       @click="handleSend"
       :disabled="disabled || !inputText.trim()"
+      :loading="sending"
+      variant="primary"
+      size="md"
       class="send-button"
     >
-      <span v-if="!sending">发送</span>
-      <span v-else class="sending-text">发送中...</span>
-    </button>
+      {{ sending ? '发送中...' : '发送' }}
+    </Button>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref } from 'vue'
+import Button from '@/components/ui/Button.vue'
 
 interface Props {
   disabled?: boolean
@@ -82,41 +85,13 @@ function handleSend() {
 }
 
 .send-button {
-  padding: 0.75rem 1.5rem;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  color: white;
-  border: none;
-  border-radius: 8px;
-  cursor: pointer;
-  font-weight: 600;
-  font-size: 1rem;
-  transition: opacity 0.2s;
   white-space: nowrap;
-}
-
-.send-button:hover:not(:disabled) {
-  opacity: 0.9;
-}
-
-.send-button:disabled {
-  opacity: 0.5;
-  cursor: not-allowed;
-}
-
-.sending-text {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.5rem;
 }
 
 @media (max-width: 768px) {
   .input-area {
     gap: 0.5rem;
     padding: 1rem;
-  }
-
-  .send-button {
-    padding: 0.75rem 1rem;
   }
 }
 </style>

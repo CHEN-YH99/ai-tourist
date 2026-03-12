@@ -57,7 +57,23 @@
           <h2 class="text-2xl font-bold text-gray-900 mb-4">
             目的地 ({{ searchResults.destinations.length }})
           </h2>
-          <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+          <div v-if="searchResults.destinations.length > 20">
+            <VirtualList
+              :items="searchResults.destinations"
+              :item-height="380"
+              container-height="800px"
+            >
+              <template #default="{ item: destination }">
+                <div class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+                  <DestinationCard
+                    :destination="destination"
+                    @click="handleDestinationClick"
+                  />
+                </div>
+              </template>
+            </VirtualList>
+          </div>
+          <div v-else class="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
             <DestinationCard
               v-for="destination in searchResults.destinations"
               :key="destination._id"
@@ -72,7 +88,22 @@
           <h2 class="text-2xl font-bold text-gray-900 mb-4">
             攻略 ({{ searchResults.itineraries.length }})
           </h2>
-          <div class="space-y-4">
+          <div v-if="searchResults.itineraries.length > 20">
+            <VirtualList
+              :items="searchResults.itineraries"
+              :item-height="120"
+              container-height="600px"
+            >
+              <template #default="{ item: itinerary }">
+                <SearchResultItem
+                  type="itinerary"
+                  :item="itinerary"
+                  @click="handleItineraryClick"
+                />
+              </template>
+            </VirtualList>
+          </div>
+          <div v-else class="space-y-4">
             <SearchResultItem
               v-for="itinerary in searchResults.itineraries"
               :key="itinerary._id"
@@ -88,7 +119,22 @@
           <h2 class="text-2xl font-bold text-gray-900 mb-4">
             对话 ({{ searchResults.conversations.length }})
           </h2>
-          <div class="space-y-4">
+          <div v-if="searchResults.conversations.length > 20">
+            <VirtualList
+              :items="searchResults.conversations"
+              :item-height="120"
+              container-height="600px"
+            >
+              <template #default="{ item: conversation }">
+                <SearchResultItem
+                  type="conversation"
+                  :item="conversation"
+                  @click="handleConversationClick"
+                />
+              </template>
+            </VirtualList>
+          </div>
+          <div v-else class="space-y-4">
             <SearchResultItem
               v-for="conversation in searchResults.conversations"
               :key="conversation._id"
@@ -139,6 +185,7 @@ import ItineraryDisplay from '@/components/ItineraryDisplay.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import SearchResultItem from '@/components/SearchResultItem.vue'
 import Modal from '@/components/ui/Modal.vue'
+import VirtualList from '@/components/VirtualList.vue'
 
 const route = useRoute()
 

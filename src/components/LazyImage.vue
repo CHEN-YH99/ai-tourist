@@ -1,18 +1,25 @@
 <template>
   <div class="relative overflow-hidden bg-gray-200 rounded-lg" :style="{ aspectRatio }">
-    <!-- Placeholder/Skeleton -->
+    <!-- Blur-up placeholder -->
     <div
-      v-if="!loaded"
+      v-if="!loaded && blurPlaceholder"
+      class="absolute inset-0 bg-cover bg-center blur-md"
+      :style="{ backgroundImage: `url(${blurPlaceholder})` }"
+    />
+
+    <!-- Animated skeleton loader -->
+    <div
+      v-if="!loaded && !blurPlaceholder"
       class="absolute inset-0 bg-gradient-to-r from-gray-200 via-gray-100 to-gray-200 animate-pulse"
     />
 
-    <!-- Image -->
+    <!-- Main image -->
     <img
       ref="imgRef"
       :src="src"
       :alt="alt"
       :class="[
-        'w-full h-full object-cover transition-opacity duration-300',
+        'w-full h-full object-cover transition-opacity duration-500',
         loaded ? 'opacity-100' : 'opacity-0'
       ]"
       @load="onLoad"
@@ -36,6 +43,7 @@ interface Props {
   src: string
   alt?: string
   aspectRatio?: string
+  blurPlaceholder?: string
 }
 
 const props = withDefaults(defineProps<Props>(), {

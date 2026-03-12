@@ -47,12 +47,17 @@
       </div>
 
       <div class="conversations-list">
-        <div v-if="conversations.length === 0" class="empty-conversations">
+        <div v-if="loadingConversations" class="space-y-2">
+          <div v-for="i in 5" :key="i" class="h-12 bg-gray-200 rounded-lg animate-pulse" />
+        </div>
+
+        <div v-else-if="conversations.length === 0" class="empty-conversations">
           <p>暂无对话记录</p>
         </div>
 
         <div
           v-for="conv in conversations"
+          v-else
           :key="conv._id"
           :class="['conversation-item', { active: currentConversation?._id === conv._id }]"
           @click="selectConversation(conv._id)"
@@ -86,6 +91,7 @@ import ChatInput from '@/components/ChatInput.vue'
 const chatStore = useChatStore()
 const messagesContainer = ref<HTMLElement>()
 const currentPage = ref(1)
+const loadingConversations = ref(false)
 
 const conversations = computed(() => chatStore.conversations)
 const currentConversation = computed(() => chatStore.currentConversation)
@@ -96,10 +102,13 @@ onMounted(async () => {
 })
 
 async function loadConversations() {
+  loadingConversations.value = true
   try {
     await chatStore.loadConversations(currentPage.value, 20)
   } catch (error) {
     console.error('Failed to load conversations:', error)
+  } finally {
+    loadingConversations.value = false
   }
 }
 
@@ -389,9 +398,13 @@ async function scrollToBottom() {
 /* Responsive */
 @media (max-width: 1024px) {
   .chat-container {
-    grid-template-columns: 1fr 240px;
+    grid-template-columns: 1fr 200px;
     gap: 1rem;
     padding: 1rem;
+  }
+
+  .sidebar {
+    max-height: 400px;
   }
 }
 
@@ -399,10 +412,78 @@ async function scrollToBottom() {
   .chat-container {
     grid-template-columns: 1fr;
     height: auto;
+    gap: 0.75rem;
+    padding: 0.75rem;
+  }
+
+  .chat-main {
+    min-height: calc(100vh - 200px);
   }
 
   .sidebar {
-    max-height: 300px;
+    max-height: 250px;
+    border-radius: 8px;
+  }
+
+  .messages {
+    padding: 1rem;
+    gap: 0.25rem;
+  }
+
+  .empty-state {
+    padding: 1rem;
+  }
+
+  .empty-icon {
+    font-size: 2rem;
+    margin-bottom: 0.5rem;
+  }
+
+  .empty-state h2 {
+    font-size: 1.25rem;
+  }
+
+  .empty-state p {
+    font-size: 0.875rem;
+  }
+
+  .sidebar-header h3 {
+    font-size: 0.875rem;
+  }
+
+  .new-chat-btn {
+    font-size: 1rem;
+  }
+
+  .conversation-title {
+    font-size: 0.75rem;
+  }
+
+  .delete-btn {
+    font-size: 0.75rem;
+  }
+
+  .load-more-btn {
+    font-size: 0.75rem;
+    padding: 0.375rem;
+  }
+}
+
+@media (max-width: 480px) {
+  .chat-container {
+    padding: 0.5rem;
+  }
+
+  .messages {
+    padding: 0.75rem;
+  }
+
+  .typing-indicator {
+    padding: 0.5rem 0.75rem;
+  }
+
+  .sidebar {
+    max-height: 200px;
   }
 }
 </style>

@@ -1,6 +1,6 @@
 <template>
-  <div class="container mx-auto px-4 py-8">
-    <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+  <div class="container mx-auto px-4 sm:px-6 lg:px-8 py-6 sm:py-8">
+    <div class="grid grid-cols-1 lg:grid-cols-3 gap-6 sm:gap-8">
       <!-- Form Column -->
       <div class="lg:col-span-1">
         <ItineraryForm
@@ -12,34 +12,36 @@
       <!-- Display Column -->
       <div class="lg:col-span-2">
         <!-- Loading State -->
-        <div v-if="itineraryStore.generating" class="space-y-4">
+        <div v-if="itineraryStore.generating" class="space-y-3 sm:space-y-4">
           <Card class="bg-blue-50 border border-blue-200">
             <div class="flex items-center gap-3">
-              <div class="inline-block w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
-              <div>
-                <p class="font-semibold text-blue-900">正在生成攻略...</p>
-                <p class="text-sm text-blue-700">这可能需要几秒钟，请稍候</p>
+              <div class="inline-block w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin flex-shrink-0" />
+              <div class="min-w-0">
+                <p class="font-semibold text-blue-900 text-sm sm:text-base">正在生成攻略...</p>
+                <p class="text-xs sm:text-sm text-blue-700">这可能需要几秒钟，请稍候</p>
               </div>
             </div>
           </Card>
+          <SkeletonLoader type="itinerary" :count="3" />
         </div>
 
         <!-- Error State -->
-        <div v-else-if="error" class="space-y-4">
+        <div v-else-if="error" class="space-y-3 sm:space-y-4">
           <Card class="bg-red-50 border border-red-200">
             <div class="flex items-start gap-3">
               <svg class="w-5 h-5 text-red-600 flex-shrink-0 mt-0.5" fill="currentColor" viewBox="0 0 20 20">
                 <path fill-rule="evenodd" d="M10 18a8 8 0 100-16 8 8 0 000 16zM8.707 7.293a1 1 0 00-1.414 1.414L8.586 10l-1.293 1.293a1 1 0 101.414 1.414L10 11.414l1.293 1.293a1 1 0 001.414-1.414L11.414 10l1.293-1.293a1 1 0 00-1.414-1.414L10 8.586 8.707 7.293z" clip-rule="evenodd" />
               </svg>
-              <div>
-                <p class="font-semibold text-red-900">生成失败</p>
-                <p class="text-sm text-red-700 mt-1">{{ error }}</p>
+              <div class="min-w-0">
+                <p class="font-semibold text-red-900 text-sm sm:text-base">生成失败</p>
+                <p class="text-xs sm:text-sm text-red-700 mt-1 break-words">{{ error }}</p>
               </div>
             </div>
           </Card>
           <Button
             variant="secondary"
             size="md"
+            class="text-sm"
             @click="error = null"
           >
             关闭错误提示
@@ -56,14 +58,14 @@
         </div>
 
         <!-- Empty State -->
-        <div v-else class="space-y-4">
+        <div v-else class="space-y-3 sm:space-y-4">
           <Card class="bg-gray-50 border-2 border-dashed border-gray-300">
-            <div class="text-center py-12">
-              <svg class="w-16 h-16 text-gray-400 mx-auto mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+            <div class="text-center py-8 sm:py-12">
+              <svg class="w-12 sm:w-16 h-12 sm:h-16 text-gray-400 mx-auto mb-3 sm:mb-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
                 <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M9 12l2 2 4-4m6 2a9 9 0 11-18 0 9 9 0 0118 0z" />
               </svg>
-              <h3 class="text-lg font-semibold text-gray-900 mb-2">还没有生成攻略</h3>
-              <p class="text-gray-600">填写左侧表单，点击"生成攻略"按钮开始</p>
+              <h3 class="text-base sm:text-lg font-semibold text-gray-900 mb-1 sm:mb-2">还没有生成攻略</h3>
+              <p class="text-xs sm:text-base text-gray-600">填写左侧表单，点击"生成攻略"按钮开始</p>
             </div>
           </Card>
         </div>
@@ -80,6 +82,7 @@ import ItineraryForm from '@/components/ItineraryForm.vue'
 import ItineraryDisplay from '@/components/ItineraryDisplay.vue'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
 
 const itineraryStore = useItineraryStore()
 const error = ref<string | null>(null)

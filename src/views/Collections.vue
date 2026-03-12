@@ -1,19 +1,19 @@
 <template>
-  <div class="min-h-screen bg-gray-50 py-8">
-    <div class="max-w-4xl mx-auto px-4">
+  <div class="min-h-screen bg-gray-50 py-6 sm:py-8">
+    <div class="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8">
       <!-- Header -->
-      <div class="mb-8">
-        <h1 class="text-3xl font-bold text-gray-900 mb-2">我的收藏</h1>
-        <p class="text-gray-600">管理你收藏的攻略和对话</p>
+      <div class="mb-6 sm:mb-8">
+        <h1 class="text-2xl sm:text-3xl font-bold text-gray-900 mb-1 sm:mb-2">我的收藏</h1>
+        <p class="text-sm sm:text-base text-gray-600">管理你收藏的攻略和对话</p>
       </div>
 
       <!-- Type Filter -->
-      <div class="mb-6 flex gap-3">
+      <div class="mb-4 sm:mb-6 flex gap-2 sm:gap-3 overflow-x-auto pb-2">
         <button
           v-for="type in filterOptions"
           :key="type.value"
           :class="[
-            'px-4 py-2 rounded-lg font-medium transition',
+            'px-3 sm:px-4 py-2 rounded-lg font-medium transition text-xs sm:text-sm whitespace-nowrap flex-shrink-0',
             selectedType === type.value
               ? 'bg-blue-600 text-white'
               : 'bg-white text-gray-700 border border-gray-300 hover:border-gray-400'
@@ -25,20 +25,20 @@
       </div>
 
       <!-- Loading State -->
-      <div v-if="loading" class="space-y-4">
-        <div v-for="i in 3" :key="i" class="h-24 bg-gray-200 rounded-lg animate-pulse" />
+      <div v-if="loading" class="space-y-3 sm:space-y-4">
+        <SkeletonLoader type="list-item" :count="5" />
       </div>
 
       <!-- Empty State -->
       <div
         v-else-if="filteredCollections.length === 0"
-        class="text-center py-12"
+        class="text-center py-8 sm:py-12"
       >
-        <div class="text-6xl mb-4">📭</div>
-        <h3 class="text-xl font-semibold text-gray-900 mb-2">
+        <div class="text-4xl sm:text-6xl mb-3 sm:mb-4">📭</div>
+        <h3 class="text-lg sm:text-xl font-semibold text-gray-900 mb-1 sm:mb-2">
           {{ selectedType === null ? '还没有收藏' : '该类型下没有收藏' }}
         </h3>
-        <p class="text-gray-600 mb-6">
+        <p class="text-xs sm:text-base text-gray-600 mb-4 sm:mb-6">
           {{ selectedType === null
             ? '收藏你喜欢的攻略和对话，方便日后查看'
             : '尝试收藏其他类型的内容'
@@ -46,22 +46,39 @@
         </p>
         <router-link
           to="/destinations"
-          class="inline-block px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition"
+          class="inline-block px-4 sm:px-6 py-2 bg-blue-600 text-white rounded-lg hover:bg-blue-700 transition text-xs sm:text-base"
         >
           浏览目的地
         </router-link>
       </div>
 
-      <!-- Collections List -->
-      <div v-else class="space-y-4">
-        <CollectionItem
-          v-for="collection in filteredCollections"
-          :key="collection._id"
-          :collection="collection"
-          :item="getCollectionItem(collection)"
-          @remove="handleRemove"
-          @viewDetails="handleViewDetails"
-        />
+      <!-- Collections List with Virtual Scrolling for large lists -->
+      <div v-else>
+        <VirtualList
+          v-if="filteredCollections.length > 20"
+          :items="filteredCollections"
+          :item-height="120"
+          container-height="600px"
+        >
+          <template #default="{ item: collection }">
+            <CollectionItem
+              :collection="collection"
+              :item="getCollectionItem(collection)"
+              @remove="handleRemove"
+              @viewDetails="handleViewDetails"
+            />
+          </template>
+        </VirtualList>
+        <div v-else class="space-y-3 sm:space-y-4">
+          <CollectionItem
+            v-for="collection in filteredCollections"
+            :key="collection._id"
+            :collection="collection"
+            :item="getCollectionItem(collection)"
+            @remove="handleRemove"
+            @viewDetails="handleViewDetails"
+          />
+        </div>
       </div>
 
       <!-- Detail Modal -->
@@ -97,6 +114,8 @@ import CollectionItem from '@/components/CollectionItem.vue'
 import ItineraryDisplay from '@/components/ItineraryDisplay.vue'
 import ChatMessage from '@/components/ChatMessage.vue'
 import Modal from '@/components/ui/Modal.vue'
+import SkeletonLoader from '@/components/SkeletonLoader.vue'
+import VirtualList from '@/components/VirtualList.vue'
 
 const collectionStore = useCollectionStore()
 

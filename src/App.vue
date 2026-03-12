@@ -5,7 +5,12 @@
       <Sidebar />
       <main class="flex-1 overflow-auto md:ml-64">
         <div class="p-4 md:p-8">
-          <router-view />
+          <Transition
+            name="fade-slide"
+            mode="out-in"
+          >
+            <router-view :key="$route.fullPath" />
+          </Transition>
         </div>
       </main>
     </div>
@@ -45,5 +50,21 @@ onMounted(() => {
 body {
   font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
   background: #f5f7fa;
+}
+
+/* Page Transition Animations */
+.fade-slide-enter-active,
+.fade-slide-leave-active {
+  transition: all 0.3s ease;
+}
+
+.fade-slide-enter-from {
+  opacity: 0;
+  transform: translateY(10px);
+}
+
+.fade-slide-leave-to {
+  opacity: 0;
+  transform: translateY(-10px);
 }
 </style>
