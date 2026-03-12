@@ -476,21 +476,21 @@
     - 测试对话历史加载
     - _需求: 1.1, 1.3, 1.4_
 
-- [-] 21. 前端攻略生成界面实现
-  - [ ] 21.1 实现ItineraryForm.vue组件
+- [x] 21. 前端攻略生成界面实现
+  - [x] 21.1 实现ItineraryForm.vue组件
     - 创建攻略生成表单（目的地、天数、预算、偏好）
     - 实现表单验证
     - 实现偏好多选
     - _需求: 2.1_
 
-  - [ ] 21.2 实现ItineraryDisplay.vue组件
+  - [x] 21.2 实现ItineraryDisplay.vue组件
     - 显示生成的攻略内容
     - 按天展示行程
     - 显示景点、餐饮、预算信息
     - 实现收藏按钮
     - _需求: 2.2_
 
-  - [ ] 21.3 实现ItineraryGenerator.vue页面
+  - [x] 21.3 实现ItineraryGenerator.vue页面
     - 集成ItineraryForm组件
     - 集成ItineraryDisplay组件
     - 集成Itinerary Store的generateItinerary action
@@ -504,21 +504,21 @@
     - 测试攻略显示
     - _需求: 2.1, 2.2, 2.3_
 
-- [ ] 22. 前端目的地浏览界面实现
-  - [ ] 22.1 实现DestinationCard.vue组件
+- [-] 22. 前端目的地浏览界面实现
+  - [-] 22.1 实现DestinationCard.vue组件
     - 显示目的地卡片（图片、名称、描述）
     - 显示热度和预算信息
     - 实现点击查看详情
     - _需求: 6.1, 6.2_
 
-  - [ ] 22.2 实现DestinationDetail.vue组件
+  - [-] 22.2 实现DestinationDetail.vue组件
     - 显示目的地详细信息
     - 显示热门景点列表
     - 显示最佳旅行时间和预算
     - 显示旅行贴士
     - _需求: 6.2, 6.3_
 
-  - [ ] 22.3 实现Destinations.vue页面
+  - [-] 22.3 实现Destinations.vue页面
     - 显示目的地列表（使用DestinationCard组件）
     - 实现筛选功能（地区、类型）
     - 实现排序功能（热度、名称、预算）
