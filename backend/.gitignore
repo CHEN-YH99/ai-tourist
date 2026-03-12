@@ -27,8 +27,11 @@ Thumbs.db
 *.swo
 *~
 
-# Uploads
-uploads/
+# Uploads (keep directory structure but ignore files)
+uploads/**/*
+!uploads/.gitkeep
+!uploads/avatars/
+!uploads/avatars/.gitkeep
 
 # Test coverage
 coverage/

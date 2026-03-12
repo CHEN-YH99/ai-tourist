@@ -63,12 +63,13 @@ app.use('/api', apiLimiter);
 
 // Import routes
 import authRoutes from './routes/authRoutes.js';
+import userRoutes from './routes/userRoutes.js';
 
 // API routes
 app.use('/api/auth', authRoutes);
+app.use('/api/users', userRoutes);
 
 // TODO: Add remaining API routes
-// app.use('/api/users', userRoutes);
 // app.use('/api/chat', chatRoutes);
 // app.use('/api/itineraries', itineraryRoutes);
 // app.use('/api/destinations', destinationRoutes);

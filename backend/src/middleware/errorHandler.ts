@@ -44,6 +44,21 @@ export function errorHandler(
     });
   }
 
+  // Handle Multer errors
+  if (err.name === 'MulterError') {
+    const multerErr = err as any;
+    if (multerErr.code === 'LIMIT_FILE_SIZE') {
+      return res.status(400).json({
+        status: 'error',
+        message: '文件大小超过限制（最大5MB）',
+      });
+    }
+    return res.status(400).json({
+      status: 'error',
+      message: '文件上传失败',
+    });
+  }
+
   // Handle Mongoose cast errors
   if (err.name === 'CastError') {
     return res.status(400).json({
