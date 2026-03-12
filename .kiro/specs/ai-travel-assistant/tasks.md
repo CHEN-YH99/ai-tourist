@@ -20,34 +20,34 @@
   - 配置MongoDB连接
   - _需求: 8.1, 8.2_
 
-- [ ] 2. 数据库层实现
-  - [ ] 2.1 实现User Schema和模型
+- [x] 2. 数据库层实现
+  - [x] 2.1 实现User Schema和模型
     - 创建User Schema，包含邮箱、密码、用户名、头像、偏好等字段
     - 添加邮箱格式验证和密码强度验证
     - 配置索引（email, username）
     - _需求: 3.1, 3.2, 3.3_
 
-  - [ ] 2.2 实现Conversation Schema和模型
+  - [x] 2.2 实现Conversation Schema和模型
     - 创建Conversation Schema，包含userId、messages数组、title
     - 定义Message子Schema（role, content, timestamp）
     - 配置索引（userId + createdAt, 全文搜索）
     - _需求: 1.3, 1.4_
 
-  - [ ] 2.3 实现Itinerary Schema和模型
+  - [x] 2.3 实现Itinerary Schema和模型
     - 创建Itinerary Schema，包含目的地、天数、预算、内容等
     - 定义DayPlan、Activity、Meal子Schema
     - 添加预算验证（min >= 0）
     - 配置索引（userId + createdAt, destination, 全文搜索）
     - _需求: 2.1, 2.2, 2.4, 2.8_
 
-  - [ ] 2.4 实现Destination Schema和模型
+  - [x] 2.4 实现Destination Schema和模型
     - 创建Destination Schema，包含名称、地区、国家、类型、描述等
     - 定义Attraction子Schema
     - 添加预算验证（max >= min, 都 > 0）
     - 配置索引（name, region + country, popularity, 全文搜索）
     - _需求: 6.1, 6.2, 6.5, 6.8_
 
-  - [ ] 2.5 实现Collection Schema和模型
+  - [x] 2.5 实现Collection Schema和模型
     - 创建Collection Schema，包含userId、itemId、itemType
     - 配置唯一索引（userId + itemId）
     - 配置索引（userId + createdAt, itemId + itemType）
