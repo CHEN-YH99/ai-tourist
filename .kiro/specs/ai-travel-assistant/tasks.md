@@ -312,8 +312,8 @@
     - **属性 47: 访问日志记录**
     - **验证需求: 8.3, 9.1, 9.2, 9.3, 9.4, 9.5, 9.6, 9.7, 10.1, 10.2, 10.3, 10.4, 10.5**
 
-- [ ] 13. 后端攻略管理API实现
-  - [ ] 13.1 实现攻略管理API端点
+- [x] 13. 后端攻略管理API实现
+  - [x] 13.1 实现攻略管理API端点
     - GET /api/itineraries - 获取攻略列表（分页）
     - GET /api/itineraries/:id - 获取特定攻略
     - PUT /api/itineraries/:id - 更新攻略
@@ -327,57 +327,57 @@
     - 测试边界情况
     - _需求: 2.4, 2.5_
 
-- [ ] 14. 检查点 - 后端完整性验证
+- [x] 14. 检查点 - 后端完整性验证
   - 确保所有后端API端点工作正常
   - 验证错误处理、日志记录、速率限制功能
   - 测试搜索和分页功能
   - 如有问题请向用户询问
 
-- [ ] 15. 前端项目初始化
-  - [ ] 15.1 创建Vue 3项目和配置
+- [x] 15. 前端项目初始化
+  - [x] 15.1 创建Vue 3项目和配置
     - 使用Vite创建Vue 3 + TypeScript项目
     - 安装依赖（Vue Router, Pinia, Axios, TailwindCSS）
     - 配置TailwindCSS
     - 配置路径别名（@指向src）
     - _需求: 前端架构_
 
-  - [ ] 15.2 配置Axios和API客户端
+  - [x] 15.2 配置Axios和API客户端
     - 创建Axios实例，配置baseURL
     - 实现请求拦截器（添加Authorization头）
     - 实现响应拦截器（处理错误）
     - 创建API模块（auth, chat, itinerary, destination, collection, search）
     - _需求: 9.1, 9.2, 9.3_
 
-  - [ ] 15.3 配置Vue Router
+  - [x] 15.3 配置Vue Router
     - 创建路由配置（Home, Chat, Itinerary, Destinations, Profile, Collections, Login, Register）
     - 实现路由懒加载
     - 实现路由守卫（requiresAuth）
     - _需求: 前端架构_
 
-- [ ] 16. 前端状态管理实现
-  - [ ] 16.1 实现Auth Store
+- [-] 16. 前端状态管理实现
+  - [x] 16.1 实现Auth Store
     - 定义state（token, user, loading）
     - 实现getters（isAuthenticated, userPreferences）
     - 实现actions（login, register, logout, fetchProfile, updateProfile）
     - 实现token持久化（localStorage）
     - _需求: 3.1, 3.5, 4.1, 4.2_
 
-  - [ ] 16.2 实现Chat Store
+  - [x] 16.2 实现Chat Store
     - 定义state（conversations, currentConversation, loading, sending）
     - 实现actions（sendMessage, loadConversations, loadConversation, clearCurrentConversation, deleteConversation）
     - _需求: 1.1, 1.3, 1.4_
 
-  - [ ] 16.3 实现Itinerary Store
+  - [x] 16.3 实现Itinerary Store
     - 定义state（itineraries, currentItinerary, generating, loading）
     - 实现actions（generateItinerary, loadItineraries, loadItinerary, deleteItinerary）
     - _需求: 2.1, 2.4_
 
-  - [ ] 16.4 实现Destination Store
+  - [x] 16.4 实现Destination Store
     - 定义state（destinations, popularDestinations, selectedDestination, loading）
     - 实现actions（loadDestinations, loadPopularDestinations, loadDestination, clearSelectedDestination）
     - _需求: 6.1, 6.3, 6.7_
 
-  - [ ] 16.5 实现Collection Store
+  - [x] 16.5 实现Collection Store
     - 定义state（collections, loading）
     - 实现actions（loadCollections, addToCollection, removeFromCollection, isCollected）
     - _需求: 5.1, 5.2, 5.4, 5.5_
@@ -390,8 +390,8 @@
     - 测试Collection Store的收藏操作
     - _需求: 所有前端功能_
 
-- [ ] 17. 前端基础组件实现
-  - [ ] 17.1 实现Layout组件
+- [-] 17. 前端基础组件实现
+  - [-] 17.1 实现Layout组件
     - 创建Header.vue（导航栏、用户菜单）
     - 创建Sidebar.vue（侧边栏导航）
     - 创建Layout.vue（整体布局）
@@ -411,13 +411,13 @@
     - 测试props传递
     - _需求: 前端架构_
 
-- [ ] 18. 检查点 - 前端基础架构验证
+- [~] 18. 检查点 - 前端基础架构验证
   - 确保项目配置正确，依赖安装完成
   - 验证路由和状态管理工作正常
   - 测试基础组件渲染
   - 如有问题请向用户询问
 
-- [ ] 19. 前端认证页面实现
+- [~] 19. 前端认证页面实现
   - [ ] 19.1 实现Login.vue
     - 创建登录表单（邮箱、密码）
     - 实现表单验证
@@ -447,7 +447,7 @@
     - 测试资料更新
     - _需求: 3.1, 3.5, 4.1_
 
-- [ ] 20. 前端AI问答界面实现
+- [~] 20. 前端AI问答界面实现
   - [ ] 20.1 实现ChatMessage.vue组件
     - 显示单条消息（用户/助手）
     - 区分消息角色样式
