@@ -64,14 +64,14 @@ app.use('/api', apiLimiter);
 // Import routes
 import authRoutes from './routes/authRoutes.js';
 import userRoutes from './routes/userRoutes.js';
+import aiRoutes from './routes/ai.js';
 
 // API routes
 app.use('/api/auth', authRoutes);
 app.use('/api/users', userRoutes);
+app.use('/api', aiRoutes);
 
 // TODO: Add remaining API routes
-// app.use('/api/chat', chatRoutes);
-// app.use('/api/itineraries', itineraryRoutes);
 // app.use('/api/destinations', destinationRoutes);
 // app.use('/api/collections', collectionRoutes);
 // app.use('/api/search', searchRoutes);
