@@ -87,7 +87,7 @@ interface Props {
   destination: Destination
 }
 
-defineProps<Props>()
+const props = defineProps<Props>()
 
 const emit = defineEmits<{
   click: [destination: Destination]

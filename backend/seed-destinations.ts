@@ -78,7 +78,7 @@ const sampleDestinations = [
     nameEn: 'Paris',
     region: '欧洲',
     country: '法国',
-    type: ['文化', '艺术', '历史', '美食'],
+    type: ['文化', '历史', '美食'],
     description:
       '巴黎是法国的首都，被誉为"光之城"和"浪漫之都"。这座城市拥有世界级的博物馆、标志性的建筑和精致的法式美食。漫步在塞纳河畔，感受这座城市独特的艺术气息和浪漫氛围。',
     images: [
@@ -125,7 +125,7 @@ const sampleDestinations = [
     nameEn: 'Sanya',
     region: '亚洲',
     country: '中国',
-    type: ['海滨', '度假', '自然'],
+    type: ['海滨', '自然'],
     description:
       '三亚位于海南岛最南端，是中国著名的热带海滨度假城市。这里拥有细腻的沙滩、清澈的海水和丰富的热带风光。全年温暖的气候使其成为冬季避寒的理想目的地。',
     images: [
@@ -172,7 +172,7 @@ const sampleDestinations = [
     nameEn: 'New York',
     region: '北美洲',
     country: '美国',
-    type: ['现代', '文化', '购物', '艺术'],
+    type: ['现代', '文化', '购物'],
     description:
       '纽约是美国最大的城市，被称为"世界之都"。这座不夜城汇聚了世界各地的文化、艺术和美食。从百老汇的音乐剧到大都会博物馆的艺术珍品，从华尔街的金融中心到时代广场的繁华，纽约展现着无与伦比的都市魅力。',
     images: [
@@ -219,7 +219,7 @@ const sampleDestinations = [
     nameEn: 'Bali',
     region: '亚洲',
     country: '印度尼西亚',
-    type: ['海滨', '度假', '文化', '自然'],
+    type: ['海滨', '文化', '自然'],
     description:
       '巴厘岛是印度尼西亚最著名的旅游胜地，被誉为"众神之岛"。这里有美丽的海滩、壮观的火山、古老的寺庙和独特的巴厘文化。巴厘岛是冲浪、潜水和瑜伽爱好者的天堂。',
     images: [
@@ -266,7 +266,7 @@ const sampleDestinations = [
     nameEn: 'London',
     region: '欧洲',
     country: '英国',
-    type: ['文化', '历史', '购物', '艺术'],
+    type: ['文化', '历史', '购物'],
     description:
       '伦敦是英国的首都，拥有悠久的历史和丰富的文化遗产。从威斯敏斯特教堂到大英博物馆，从泰晤士河畔的现代建筑到传统的红色电话亭，伦敦完美融合了古典与现代。',
     images: [
@@ -313,7 +313,7 @@ const sampleDestinations = [
     nameEn: 'Xi\'an',
     region: '亚洲',
     country: '中国',
-    type: ['历史', '文化', '艺术'],
+    type: ['历史', '文化'],
     description:
       '西安是中国古代文明的重要发源地，拥有丰富的历史文化遗产。秦兵马俑、古城墙、大雁塔等著名景点见证了中华文明的辉煌。西安的美食文化也享誉全国，是品尝陕西特色小吃的最佳地点。',
     images: [
@@ -360,7 +360,7 @@ const sampleDestinations = [
     nameEn: 'Dubai',
     region: '亚洲',
     country: '阿联酋',
-    type: ['现代', '购物', '度假', '冒险'],
+    type: ['现代', '购物', '冒险'],
     description:
       '迪拜是中东最现代化的城市，以其超现代的建筑、奢华的购物和独特的沙漠体验而闻名。从世界最高的哈利法塔到人工岛棕榈岛，迪拜展现了人类的建筑奇迹。',
     images: [
@@ -407,7 +407,7 @@ const sampleDestinations = [
     nameEn: 'Amsterdam',
     region: '欧洲',
     country: '荷兰',
-    type: ['文化', '艺术', '美食', '购物'],
+    type: ['文化', '美食', '购物'],
     description:
       '阿姆斯特丹是荷兰的首都，以其独特的运河系统、自行车文化和艺术氛围而闻名。这座城市拥有众多世界级博物馆，如梵高美术馆和安妮之家，是艺术爱好者的天堂。',
     images: [
@@ -501,7 +501,7 @@ const sampleDestinations = [
     nameEn: 'Rome',
     region: '欧洲',
     country: '意大利',
-    type: ['历史', '文化', '艺术', '美食'],
+    type: ['历史', '文化', '美食'],
     description:
       '罗马是意大利的首都，被誉为"永恒之城"。这座城市拥有2000多年的历史，古罗马遗迹、文艺复兴艺术和美味的意大利美食吸引着世界各地的游客。',
     images: [
@@ -548,7 +548,7 @@ const sampleDestinations = [
     nameEn: 'Sydney',
     region: '大洋洲',
     country: '澳大利亚',
-    type: ['海滨', '度假', '自然', '现代'],
+    type: ['海滨', '自然', '现代'],
     description:
       '悉尼是澳大利亚最大的城市，以其标志性的歌剧院和美丽的海滩而闻名。这座城市融合了现代都市风格和自然美景，是冲浪、潜水和海滩爱好者的天堂。',
     images: [

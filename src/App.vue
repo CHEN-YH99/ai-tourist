@@ -5,12 +5,14 @@
       <Sidebar />
       <main class="flex-1 overflow-auto md:ml-64">
         <div class="p-4 md:p-8">
-          <Transition
-            name="fade-slide"
-            mode="out-in"
-          >
-            <router-view :key="$route.fullPath" />
-          </Transition>
+          <router-view v-slot="{ Component }">
+            <Transition
+              name="fade-slide"
+              mode="out-in"
+            >
+              <component :is="Component" :key="$route.fullPath" />
+            </Transition>
+          </router-view>
         </div>
       </main>
     </div>
