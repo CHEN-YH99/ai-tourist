@@ -12,20 +12,7 @@
 
         <!-- Search Bar -->
         <div class="flex-1 max-w-md mx-8">
-          <div class="relative">
-            <input
-              type="text"
-              placeholder="搜索目的地、攻略..."
-              class="w-full px-4 py-2 rounded-lg border border-gray-300 focus:outline-none focus:ring-2 focus:ring-blue-500"
-              @keyup.enter="handleSearch"
-            />
-            <button
-              class="absolute right-3 top-1/2 transform -translate-y-1/2 text-gray-400 hover:text-gray-600"
-              @click="handleSearch"
-            >
-              🔍
-            </button>
-          </div>
+          <SearchBar />
         </div>
 
         <!-- Navigation & User Menu -->
@@ -152,6 +139,7 @@
 import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
+import SearchBar from '@/components/SearchBar.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
@@ -171,10 +159,5 @@ async function handleLogout() {
   await authStore.logout();
   showUserMenu.value = false;
   router.push('/');
-}
-
-function handleSearch() {
-  // TODO: Implement search functionality
-  showUserMenu.value = false;
 }
 </script>

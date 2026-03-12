@@ -8,6 +8,7 @@ const ItineraryGenerator = () => import('@/views/ItineraryGenerator.vue')
 const Destinations = () => import('@/views/Destinations.vue')
 const Profile = () => import('@/views/Profile.vue')
 const Collections = () => import('@/views/Collections.vue')
+const SearchResults = () => import('@/views/SearchResults.vue')
 const Login = () => import('@/views/Login.vue')
 const Register = () => import('@/views/Register.vue')
 
@@ -45,6 +46,11 @@ const routes: RouteRecordRaw[] = [
     name: 'Collections',
     component: Collections,
     meta: { requiresAuth: true }
+  },
+  {
+    path: '/search',
+    name: 'SearchResults',
+    component: SearchResults
   },
   {
     path: '/login',
