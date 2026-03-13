@@ -8,6 +8,7 @@ dist/
 .env
 .env.local
 .env.*.local
+.env.production
 
 # Logs
 logs/
@@ -35,3 +36,22 @@ uploads/**/*
 
 # Test coverage
 coverage/
+
+# Documentation (ignore all .md files except README.md)
+*.md
+!README.md
+
+# Test files
+test-*.ts
+test-*.js
+*-test.ts
+*-test.js
+checkpoint-*.ts
+*-checkpoint.ts
+
+# Seed scripts (optional - uncomment if you don't want to commit seed data)
+# seed-*.ts
+
+# Temporary files
+*.tmp
+*.temp
