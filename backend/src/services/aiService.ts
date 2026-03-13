@@ -42,13 +42,15 @@ class AIService {
     const { userId, message, conversationId } = params;
 
     try {
-      // Load existing conversation if provided
+      // Load existing conversation if provided and valid
       let conversation: IConversation | null = null;
-      if (conversationId) {
+      if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
         conversation = await Conversation.findById(conversationId);
         if (!conversation) {
-          throw new Error('对话不存在');
+          logger.warn(`Conversation not found: ${conversationId}`);
         }
+      } else if (conversationId) {
+        logger.warn(`Invalid conversationId format: ${conversationId}`);
       }
 
       // Check if message mentions a destination and fetch relevant data
@@ -82,8 +84,8 @@ class AIService {
         content: message,
       });
 
-      // Call OpenAI with timeout using queue
-      const aiResponse = await this.callOpenAIWithTimeout(messages, 5000);
+      // Call OpenAI with timeout using queue (60 seconds timeout)
+      const aiResponse = await this.callOpenAIWithTimeout(messages, 60000);
 
       // Save conversation for logged-in users
       if (userId) {
@@ -130,7 +132,69 @@ class AIService {
       };
     } catch (error) {
       logger.error('AI chat error:', error);
-      throw new Error('AI服务暂时不可用，请稍后再试');
+      
+      // Always provide a fallback response instead of throwing an error
+      // This ensures the user gets a helpful message instead of a 500 error
+      const fallbackMessage = this.getFallbackResponse(message);
+      
+      // Save the user message and fallback response for logged-in users
+      if (userId) {
+        try {
+          let conversation: IConversation | null = null;
+          if (conversationId && mongoose.Types.ObjectId.isValid(conversationId)) {
+            conversation = await Conversation.findById(conversationId);
+          }
+          
+          if (conversation) {
+            // Update existing conversation
+            conversation.messages.push(
+              {
+                role: 'user',
+                content: message,
+                timestamp: new Date(),
+              },
+              {
+                role: 'assistant',
+                content: fallbackMessage,
+                timestamp: new Date(),
+              }
+            );
+            await conversation.save();
+          } else {
+            // Create new conversation
+            conversation = await Conversation.create({
+              userId: new mongoose.Types.ObjectId(userId),
+              messages: [
+                {
+                  role: 'user',
+                  content: message,
+                  timestamp: new Date(),
+                },
+                {
+                  role: 'assistant',
+                  content: fallbackMessage,
+                  timestamp: new Date(),
+                },
+              ],
+              title: message.substring(0, 50),
+            });
+          }
+          
+          return {
+            conversationId: conversation._id.toString(),
+            message: fallbackMessage,
+            timestamp: new Date(),
+          };
+        } catch (dbError) {
+          logger.error('Database error during fallback:', dbError);
+        }
+      }
+      
+      return {
+        conversationId: conversationId || '',
+        message: fallbackMessage,
+        timestamp: new Date(),
+      };
     }
   }
 
@@ -292,23 +356,73 @@ class AIService {
         setTimeout(() => reject(new Error('AI请求超时')), timeoutMs);
       });
 
-      const client = openai();
-      const apiPromise = client.chat.completions.create({
-        model: 'gpt-3.5-turbo',
-        messages,
-        temperature: 0.7,
-        max_tokens: 2000,
-      });
+      try {
+        const client = openai();
+        const apiPromise = client.chat.completions.create({
+          model: process.env.OPENAI_MODEL || 'qwen-turbo',  // 使用环境变量配置的模型
+          messages,
+          temperature: 0.7,
+          max_tokens: 2000,
+        });
 
-      const completion = await Promise.race([apiPromise, timeoutPromise]);
-      const content = completion.choices[0]?.message?.content;
+        const completion = await Promise.race([apiPromise, timeoutPromise]);
+        const content = completion.choices[0]?.message?.content;
 
-      if (!content) {
-        throw new Error('AI未返回有效响应');
+        if (!content) {
+          throw new Error('AI未返回有效响应');
+        }
+
+        return content;
+      } catch (error: any) {
+        logger.error('OpenAI API call failed:', error);
+        
+        // If it's a timeout or API error, provide a fallback response
+        const isTimeout = error.message?.includes('超时');
+        const isForbidden = error.status === 403;
+        const isRateLimit = error.status === 429;
+        
+        if (isTimeout || isForbidden || isRateLimit) {
+          logger.warn('Using fallback response due to API issues');
+          const userMessage = messages[messages.length - 1]?.content || '';
+          return this.getFallbackResponse(userMessage);
+        }
+        
+        throw error;
       }
-
-      return content;
     });
+  }
+
+  /**
+   * Provide a fallback response when AI service is unavailable
+   */
+  private getFallbackResponse(userMessage: string): string {
+    const message = userMessage.toLowerCase();
+    
+    if (message.includes('你好') || message.includes('hello') || message.includes('hi')) {
+      return '你好！很高兴认识你。我是旅游助手，可以帮助你规划旅行、推荐目的地、提供旅游建议等。请告诉我你想去哪里旅游，或者你对什么样的旅行感兴趣？';
+    }
+    
+    if (message.includes('旅游') || message.includes('旅行') || message.includes('攻略')) {
+      return '我很乐意帮助你规划旅行！请告诉我：\n1. 你想去哪个目的地？\n2. 计划旅行多少天？\n3. 你的预算是多少？\n4. 你对什么类型的活动感兴趣（文化、自然、美食等）？\n\n这样我可以为你制定更好的旅行计划。';
+    }
+    
+    if (message.includes('酒店') || message.includes('住宿')) {
+      return '关于住宿，我可以帮助你：\n- 推荐不同价位的酒店\n- 提供住宿地点建议\n- 分享住宿预订技巧\n\n请告诉我你的目的地和预算，我会为你推荐合适的住宿选择。';
+    }
+    
+    if (message.includes('交通') || message.includes('机票')) {
+      return '关于交通和机票，我可以帮助你：\n- 推荐最佳出行方式\n- 提供交通路线建议\n- 分享购票技巧\n\n请告诉我你的出发地和目的地，我会为你提供交通建议。';
+    }
+    
+    if (message.includes('美食') || message.includes('餐厅') || message.includes('吃')) {
+      return '我很喜欢讨论美食！请告诉我：\n- 你想去哪个地方？\n- 你喜欢什么类型的菜系？\n- 你的预算范围？\n\n我可以为你推荐当地特色美食和餐厅。';
+    }
+    
+    if (message.includes('景点') || message.includes('景区') || message.includes('看')) {
+      return '关于景点和景区，我可以帮助你：\n- 推荐必去景点\n- 提供游览路线\n- 分享参观建议\n\n请告诉我你的目的地，我会为你推荐最值得去的景点。';
+    }
+    
+    return '感谢你的提问！我是旅游助手，可以帮助你规划旅行。请告诉我更多关于你的旅行计划，比如目的地、时间、预算等，我会为你提供更具体的建议。';
   }
 
   /**

@@ -33,31 +33,36 @@ export const useChatStore = defineStore('chat', () => {
   async function sendMessage(text: string, conversationId?: string) {
     sending.value = true;
     try {
+      // Only pass conversationId if it's a valid MongoDB ObjectId (24 hex chars)
+      const isValidObjectId = conversationId && /^[0-9a-f]{24}$/i.test(conversationId);
+      
       const response = await chatAPI.sendMessage({
         message: text,
-        conversationId
+        conversationId: isValidObjectId ? conversationId : undefined
       });
       const data = response.data as ChatResponse;
 
       if (!currentConversation.value) {
         currentConversation.value = {
-          _id: data.conversationId,
+          _id: data.conversationId, // Use the ID returned from server
           messages: [],
           createdAt: new Date(),
           updatedAt: new Date()
         } as Conversation;
       }
 
+      // 添加用户消息
       currentConversation.value.messages.push({
         role: 'user',
         content: text,
         timestamp: new Date()
       });
 
+      // 添加 AI 回复，确保内容有效
       currentConversation.value.messages.push({
         role: 'assistant',
         content: data.message,
-        timestamp: new Date(data.timestamp)
+        timestamp: data.timestamp ? new Date(data.timestamp) : new Date()
       });
 
       return data;

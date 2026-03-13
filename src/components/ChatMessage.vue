@@ -19,8 +19,14 @@ interface Props {
 
 defineProps<Props>()
 
-function formatTime(date: Date): string {
+function formatTime(date: Date | string): string {
   const d = new Date(date)
+  
+  // 检查日期是否有效
+  if (isNaN(d.getTime())) {
+    return '刚刚'
+  }
+  
   const hours = String(d.getHours()).padStart(2, '0')
   const minutes = String(d.getMinutes()).padStart(2, '0')
   return `${hours}:${minutes}`

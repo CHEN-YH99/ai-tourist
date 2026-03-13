@@ -37,8 +37,8 @@
       />
     </div>
 
-    <!-- Sidebar - Conversation History -->
-    <div class="sidebar">
+    <!-- Sidebar - Conversation History (only show if authenticated) -->
+    <div v-if="isAuthenticated" class="sidebar">
       <div class="sidebar-header">
         <h3>对话历史</h3>
         <button class="new-chat-btn" @click="startNewConversation" title="新建对话">
@@ -79,16 +79,30 @@
         加载更多
       </button>
     </div>
+
+    <!-- Login prompt for unauthenticated users -->
+    <div v-else class="sidebar login-prompt">
+      <div class="login-prompt-content">
+        <div class="login-icon">🔐</div>
+        <h3>登录以保存对话</h3>
+        <p>登录后可以查看和管理你的对话历史</p>
+        <router-link to="/login" class="login-btn">
+          立即登录
+        </router-link>
+      </div>
+    </div>
   </div>
 </template>
 
 <script setup lang="ts">
 import { ref, computed, nextTick, onMounted } from 'vue'
 import { useChatStore } from '@/stores/chat'
+import { useAuthStore } from '@/stores/auth'
 import ChatMessage from '@/components/ChatMessage.vue'
 import ChatInput from '@/components/ChatInput.vue'
 
 const chatStore = useChatStore()
+const authStore = useAuthStore()
 const messagesContainer = ref<HTMLElement>()
 const currentPage = ref(1)
 const loadingConversations = ref(false)
@@ -96,9 +110,13 @@ const loadingConversations = ref(false)
 const conversations = computed(() => chatStore.conversations)
 const currentConversation = computed(() => chatStore.currentConversation)
 const sending = computed(() => chatStore.sending)
+const isAuthenticated = computed(() => authStore.isAuthenticated)
 
 onMounted(async () => {
-  await loadConversations()
+  // Only load conversations if user is authenticated
+  if (isAuthenticated.value) {
+    await loadConversations()
+  }
 })
 
 async function loadConversations() {
@@ -393,6 +411,52 @@ async function scrollToBottom() {
 
 .load-more-btn:hover {
   background: #edf2f7;
+}
+
+/* Login prompt */
+.login-prompt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+}
+
+.login-prompt-content {
+  text-align: center;
+  padding: 1.5rem;
+}
+
+.login-icon {
+  font-size: 2.5rem;
+  margin-bottom: 1rem;
+}
+
+.login-prompt-content h3 {
+  font-size: 1rem;
+  color: #2d3748;
+  margin-bottom: 0.5rem;
+}
+
+.login-prompt-content p {
+  font-size: 0.875rem;
+  color: #718096;
+  margin-bottom: 1.5rem;
+}
+
+.login-btn {
+  display: inline-block;
+  padding: 0.75rem 1.5rem;
+  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  color: white;
+  text-decoration: none;
+  border-radius: 8px;
+  font-size: 0.875rem;
+  font-weight: 600;
+  transition: transform 0.2s, box-shadow 0.2s;
+}
+
+.login-btn:hover {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 /* Responsive */
