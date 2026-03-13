@@ -41,6 +41,14 @@ coverage/
 *.md
 !README.md
 
+# Task documentation files
+TASK_*.md
+*_TASK_*.md
+*CHECKPOINT*.md
+*REPORT*.md
+*IMPLEMENTATION*.md
+*VERIFICATION*.md
+
 # Test files
 test-*.ts
 test-*.js
