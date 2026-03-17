@@ -74,40 +74,45 @@
               <template v-if="authStore.isAuthenticated">
                 <router-link
                   to="/profile"
-                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition text-sm"
+                  class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-100 transition text-sm"
                   @click="showUserMenu = false"
                 >
-                  个人资料
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M16 7a4 4 0 11-8 0 4 4 0 018 0zM12 14a7 7 0 00-7 7h14a7 7 0 00-7-7z" />
+                  </svg>
+                  <span>个人信息</span>
                 </router-link>
-                <router-link
-                  to="/collections"
-                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition text-sm"
-                  @click="showUserMenu = false"
-                >
-                  我的收藏
-                </router-link>
-                <hr class="my-2" />
+                <hr class="my-2 border-gray-200" />
                 <button
-                  class="w-full text-left px-4 py-2 text-gray-700 hover:bg-gray-100 transition text-sm"
-                  @click="handleLogout"
+                  class="w-full flex items-center gap-3 px-4 py-2.5 text-red-600 hover:bg-red-50 transition text-sm"
+                  @click="showLogoutConfirm"
                 >
-                  登出
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M17 16l4-4m0 0l-4-4m4 4H7m6 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h4a3 3 0 013 3v1" />
+                  </svg>
+                  <span>退出</span>
                 </button>
               </template>
               <template v-else>
                 <router-link
                   to="/login"
-                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition text-sm"
+                  class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-100 transition text-sm"
                   @click="showUserMenu = false"
                 >
-                  登录
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M11 16l-4-4m0 0l4-4m-4 4h14m-5 4v1a3 3 0 01-3 3H6a3 3 0 01-3-3V7a3 3 0 013-3h7a3 3 0 013 3v1" />
+                  </svg>
+                  <span>登录</span>
                 </router-link>
                 <router-link
                   to="/register"
-                  class="block px-4 py-2 text-gray-700 hover:bg-gray-100 transition text-sm"
+                  class="flex items-center gap-3 px-4 py-2.5 text-gray-700 hover:bg-gray-100 transition text-sm"
                   @click="showUserMenu = false"
                 >
-                  注册
+                  <svg class="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path stroke-linecap="round" stroke-linejoin="round" stroke-width="2" d="M18 9v3m0 0v3m0-3h3m-3 0h-3m-2-5a4 4 0 11-8 0 4 4 0 018 0zM3 20a6 6 0 0112 0v1H3v-1z" />
+                  </svg>
+                  <span>注册</span>
                 </router-link>
               </template>
             </div>
@@ -120,6 +125,17 @@
         <SearchBar />
       </div>
     </div>
+
+    <!-- Logout Confirmation Dialog -->
+    <ConfirmDialog
+      v-model="showLogoutDialog"
+      title="确认退出"
+      message="您确定要退出登录吗？"
+      confirm-text="退出"
+      cancel-text="取消"
+      confirm-variant="danger"
+      @confirm="handleLogout"
+    />
   </header>
 </template>
 
@@ -129,11 +145,13 @@ import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import SearchBar from '@/components/SearchBar.vue';
 import Avatar from '@/components/ui/Avatar.vue';
+import ConfirmDialog from '@/components/ui/ConfirmDialog.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();
 
 const showUserMenu = ref(false);
+const showLogoutDialog = ref(false);
 
 defineEmits<{
   'toggle-sidebar': [];
@@ -143,9 +161,14 @@ function toggleUserMenu() {
   showUserMenu.value = !showUserMenu.value;
 }
 
+function showLogoutConfirm() {
+  showUserMenu.value = false;
+  showLogoutDialog.value = true;
+}
+
 async function handleLogout() {
   await authStore.logout();
-  showUserMenu.value = false;
+  showLogoutDialog.value = false;
   router.push('/');
 }
 </script>
