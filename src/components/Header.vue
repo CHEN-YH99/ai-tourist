@@ -56,9 +56,11 @@
               class="flex items-center gap-2 px-2 sm:px-3 py-2 rounded-lg hover:bg-gray-100 transition"
               @click="toggleUserMenu"
             >
-              <div class="w-8 h-8 bg-gray-300 rounded-full flex items-center justify-center flex-shrink-0">
-                <span class="text-sm font-semibold">👤</span>
-              </div>
+              <Avatar 
+                :src="authStore.user?.avatar"
+                :username="authStore.user?.username || '游客'"
+                size="sm"
+              />
               <span class="text-xs sm:text-sm text-gray-700 hidden sm:inline truncate max-w-[100px]">
                 {{ authStore.user?.username || '登录' }}
               </span>
@@ -126,6 +128,7 @@ import { ref } from 'vue';
 import { useRouter } from 'vue-router';
 import { useAuthStore } from '@/stores/auth';
 import SearchBar from '@/components/SearchBar.vue';
+import Avatar from '@/components/ui/Avatar.vue';
 
 const router = useRouter();
 const authStore = useAuthStore();

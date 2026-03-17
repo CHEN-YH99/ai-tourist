@@ -1,5 +1,5 @@
 <template>
-  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4">
+  <div class="min-h-screen bg-gradient-to-br from-blue-50 to-indigo-100 flex items-center justify-center px-4 py-8">
     <Card class="w-full max-w-md">
       <template #header>
         <h1 class="text-2xl font-bold text-gray-900">注册</h1>
@@ -49,6 +49,16 @@
           required
         />
 
+        <!-- Slider Captcha -->
+        <div class="space-y-2">
+          <label class="block text-sm font-medium text-gray-700">安全验证</label>
+          <SliderCaptcha 
+            @verified="handleCaptchaVerified"
+            @failed="handleCaptchaFailed"
+          />
+          <p v-if="errors.captcha" class="text-sm text-red-600">{{ errors.captcha }}</p>
+        </div>
+
         <!-- Error Message -->
         <div v-if="errors.submit" class="p-3 bg-red-50 border border-red-200 rounded-lg">
           <p class="text-sm text-red-700">{{ errors.submit }}</p>
@@ -61,7 +71,7 @@
           size="lg"
           class="w-full"
           :loading="authStore.loading"
-          :disabled="authStore.loading"
+          :disabled="authStore.loading || !captchaVerified"
         >
           注册
         </Button>
@@ -82,12 +92,13 @@
 </template>
 
 <script setup lang="ts">
-import { reactive } from 'vue'
+import { reactive, ref } from 'vue'
 import { useRouter } from 'vue-router'
 import { useAuthStore } from '@/stores/auth'
 import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
+import SliderCaptcha from '@/components/ui/SliderCaptcha.vue'
 
 const router = useRouter()
 const authStore = useAuthStore()
@@ -104,12 +115,14 @@ const errors = reactive({
   email: '',
   password: '',
   confirmPassword: '',
+  captcha: '',
   submit: ''
 })
 
+const captchaVerified = ref(false)
+
 // Validate password strength
 function isPasswordStrong(password: string): boolean {
-  // At least 8 characters, contains letters and numbers
   const hasLetters = /[a-zA-Z]/.test(password)
   const hasNumbers = /\d/.test(password)
   return password.length >= 8 && hasLetters && hasNumbers
@@ -123,7 +136,6 @@ function validateForm(): boolean {
   errors.confirmPassword = ''
   errors.submit = ''
 
-  // Username validation
   if (!formData.username) {
     errors.username = '用户名不能为空'
     return false
@@ -133,7 +145,6 @@ function validateForm(): boolean {
     return false
   }
 
-  // Email validation
   if (!formData.email) {
     errors.email = '邮箱不能为空'
     return false
@@ -144,7 +155,6 @@ function validateForm(): boolean {
     return false
   }
 
-  // Password validation
   if (!formData.password) {
     errors.password = '密码不能为空'
     return false
@@ -154,7 +164,6 @@ function validateForm(): boolean {
     return false
   }
 
-  // Confirm password validation
   if (!formData.confirmPassword) {
     errors.confirmPassword = '请确认密码'
     return false
@@ -164,7 +173,21 @@ function validateForm(): boolean {
     return false
   }
 
+  if (!captchaVerified.value) {
+    errors.captcha = '请完成安全验证'
+    return false
+  }
+
   return true
+}
+
+function handleCaptchaVerified() {
+  captchaVerified.value = true
+  errors.captcha = ''
+}
+
+function handleCaptchaFailed() {
+  captchaVerified.value = false
 }
 
 // Handle register
@@ -180,10 +203,18 @@ async function handleRegister() {
       password: formData.password
     })
 
-    // Redirect to home after successful registration
-    router.push('/')
+    // Redirect to login page with username pre-filled
+    router.push({
+      name: 'Login',
+      query: { 
+        email: formData.email,
+        username: formData.username,
+        registered: 'true'
+      }
+    })
   } catch (error: any) {
-    errors.submit = error.response?.data?.message || '注册失败，请稍后重试'
+    errors.submit = error.message || '注册失败，请稍后重试'
+    captchaVerified.value = false
   }
 }
 </script>

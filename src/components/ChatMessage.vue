@@ -1,7 +1,14 @@
 <template>
   <div :class="['message', message.role]">
     <div class="message-content">
-      <span class="avatar">{{ message.role === 'user' ? '👤' : '🤖' }}</span>
+      <Avatar 
+        v-if="message.role === 'user'"
+        :src="userAvatar"
+        :username="username"
+        size="sm"
+        class="avatar"
+      />
+      <span v-else class="avatar">🤖</span>
       <div class="message-bubble">
         <p class="message-text">{{ message.content }}</p>
         <span class="timestamp">{{ formatTime(message.timestamp) }}</span>
@@ -11,6 +18,9 @@
 </template>
 
 <script setup lang="ts">
+import { computed } from 'vue'
+import { useAuthStore } from '@/stores/auth'
+import Avatar from '@/components/ui/Avatar.vue'
 import type { Message } from '@/types'
 
 interface Props {
@@ -19,10 +29,14 @@ interface Props {
 
 defineProps<Props>()
 
+const authStore = useAuthStore()
+
+const username = computed(() => authStore.user?.username || '游客')
+const userAvatar = computed(() => authStore.user?.avatar)
+
 function formatTime(date: Date | string): string {
   const d = new Date(date)
   
-  // 检查日期是否有效
   if (isNaN(d.getTime())) {
     return '刚刚'
   }
@@ -55,8 +69,8 @@ function formatTime(date: Date | string): string {
 }
 
 .avatar {
-  font-size: 1.5rem;
   flex-shrink: 0;
+  font-size: 1.5rem;
 }
 
 .message-bubble {

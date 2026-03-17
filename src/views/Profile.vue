@@ -23,18 +23,11 @@
           <div class="flex flex-col sm:flex-row items-center gap-4 sm:gap-6">
             <!-- Avatar Display -->
             <div class="flex-shrink-0">
-              <img
-                v-if="authStore.user?.avatar"
-                :src="authStore.user.avatar"
-                alt="用户头像"
-                class="w-20 sm:w-24 h-20 sm:h-24 rounded-full object-cover border-2 border-gray-200"
+              <Avatar 
+                :src="authStore.user?.avatar"
+                :username="authStore.user?.username || '用户'"
+                size="xl"
               />
-              <div
-                v-else
-                class="w-20 sm:w-24 h-20 sm:h-24 rounded-full bg-gradient-to-br from-blue-400 to-indigo-600 flex items-center justify-center text-white text-xl sm:text-2xl font-bold"
-              >
-                {{ getInitials(authStore.user?.username || '') }}
-              </div>
             </div>
 
             <!-- Upload Section -->
@@ -260,6 +253,7 @@ import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
 import Button from '@/components/ui/Button.vue'
 import Loading from '@/components/ui/Loading.vue'
+import Avatar from '@/components/ui/Avatar.vue'
 import type { UpdateProfileDTO, UserProfile } from '@/types'
 
 const router = useRouter()
@@ -297,16 +291,6 @@ const errors = reactive({
   wechat: '',
   submit: ''
 })
-
-// Get user initials for avatar placeholder
-function getInitials(username: string): string {
-  return username
-    .split(' ')
-    .map(n => n[0])
-    .join('')
-    .toUpperCase()
-    .slice(0, 2)
-}
 
 // Format date
 function formatDate(date?: Date): string {

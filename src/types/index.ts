@@ -1,6 +1,6 @@
 // Auth Types
 export interface UserProfile {
-  _id: string
+  id: string
   email: string
   username: string
   avatar?: string
@@ -9,8 +9,8 @@ export interface UserProfile {
     phone?: string
     wechat?: string
   }
-  createdAt: Date
-  updatedAt: Date
+  createdAt?: Date
+  updatedAt?: Date
 }
 
 export interface LoginDTO {
