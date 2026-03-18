@@ -40,7 +40,8 @@ export const useChatStore = defineStore('chat', () => {
         message: text,
         conversationId: isValidObjectId ? conversationId : undefined
       });
-      const data = response.data as ChatResponse;
+      
+      const data = response.data?.data || response.data;
 
       if (!currentConversation.value) {
         currentConversation.value = {
@@ -49,6 +50,11 @@ export const useChatStore = defineStore('chat', () => {
           createdAt: new Date(),
           updatedAt: new Date()
         } as Conversation;
+      }
+
+      // Ensure messages array exists
+      if (!currentConversation.value.messages) {
+        currentConversation.value.messages = [];
       }
 
       // 添加用户消息
@@ -78,8 +84,20 @@ export const useChatStore = defineStore('chat', () => {
     loading.value = true;
     try {
       const response = await chatAPI.getConversations(page, pageSize);
-      const data = response.data as PaginatedResponse<Conversation>;
-      conversations.value = data.items;
+      const data = response.data?.data || response.data;
+      
+      // Ensure data is in the correct format
+      if (data && Array.isArray(data.items)) {
+        conversations.value = data.items.map((conv: any) => ({
+          ...conv,
+          messages: conv.messages || []
+        }));
+      } else if (data && Array.isArray(data)) {
+        conversations.value = data.map((conv: any) => ({
+          ...conv,
+          messages: conv.messages || []
+        }));
+      }
     } catch (error) {
       console.error('Failed to load conversations:', error);
       throw error;
@@ -92,7 +110,11 @@ export const useChatStore = defineStore('chat', () => {
     loading.value = true;
     try {
       const response = await chatAPI.getConversation(id);
-      currentConversation.value = response.data as Conversation;
+      const data = response.data?.data || response.data;
+      currentConversation.value = {
+        ...data,
+        messages: data.messages || []
+      } as Conversation;
     } catch (error) {
       console.error('Failed to load conversation:', error);
       throw error;
@@ -102,7 +124,12 @@ export const useChatStore = defineStore('chat', () => {
   }
 
   function clearCurrentConversation() {
-    currentConversation.value = null;
+    currentConversation.value = {
+      _id: '',
+      messages: [],
+      createdAt: new Date(),
+      updatedAt: new Date()
+    } as Conversation;
   }
 
   async function deleteConversation(id: string) {

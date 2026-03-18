@@ -4,7 +4,7 @@
     <div class="chat-main">
       <!-- Messages Container -->
       <div class="messages-wrapper">
-        <div v-if="!currentConversation || currentConversation.messages.length === 0" class="empty-state">
+        <div v-if="!currentConversation || !currentConversation.messages || currentConversation.messages.length === 0" class="empty-state">
           <div class="empty-icon">💬</div>
           <h2>开始对话</h2>
           <p>向AI助手提问关于旅游的任何问题</p>
@@ -12,7 +12,7 @@
 
         <div v-else class="messages" ref="messagesContainer">
           <ChatMessage
-            v-for="(msg, index) in currentConversation.messages"
+            v-for="(msg, index) in (currentConversation.messages || [])"
             :key="index"
             :message="msg"
           />
