@@ -58,6 +58,28 @@ export const useItineraryStore = defineStore('itinerary', () => {
 
   // Add to generation history
   const addToHistory = (params: ItineraryParams, itinerary?: Itinerary) => {
+    // 防重复检查：基于攻略ID或参数组合
+    const isDuplicate = generationHistory.value.some(item => {
+      // 如果有攻略对象且有ID，基于ID判断
+      if (itinerary?._id && item.itinerary?._id) {
+        return item.itinerary._id === itinerary._id;
+      }
+      
+      // 否则基于参数组合判断（目的地、天数、预算）
+      return (
+        item.params.destination === params.destination &&
+        item.params.days === params.days &&
+        item.params.budget === params.budget &&
+        // 检查时间戳是否在5秒内（避免快速重复点击）
+        Math.abs(Date.now() - item.timestamp) < 5000
+      );
+    });
+    
+    if (isDuplicate) {
+      console.log('⚠️ 检测到重复的历史记录，跳过添加');
+      return;
+    }
+    
     const historyItem: GenerationHistory = {
       id: Date.now().toString(),
       params,
@@ -65,6 +87,7 @@ export const useItineraryStore = defineStore('itinerary', () => {
       itinerary
     };
     
+    console.log('✓ 添加新的历史记录:', params.destination);
     generationHistory.value.unshift(historyItem);
     
     // Keep only last 20 items

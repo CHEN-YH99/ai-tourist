@@ -203,16 +203,8 @@ watch(() => itineraryStore.currentItinerary, (newItinerary) => {
       lastParams.value = params
     }
     
-    // 检查是否已经在历史记录中
-    const exists = itineraryStore.generationHistory.some(
-      item => item.itinerary?._id === newItinerary._id
-    )
-    
-    // 如果不存在，手动添加到历史记录
-    if (!exists) {
-      console.log('添加攻略到历史记录:', newItinerary.destination)
-      itineraryStore.addToHistory(params, newItinerary)
-    }
+    // 尝试添加到历史记录（store 中会自动检查重复）
+    itineraryStore.addToHistory(params, newItinerary)
   }
 })
 

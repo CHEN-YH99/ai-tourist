@@ -246,15 +246,54 @@ async function handleSaveCollection() {
       isCollected.value = false
       collectionId.value = null
     } else {
-      // Add to collection
-      const response = await collectionAPI.add(props.itinerary._id, 'itinerary')
+      // 检查是否是临时ID（从聊天生成的攻略）
+      const isTempId = props.itinerary._id.startsWith('chat-')
+      
+      let itineraryId = props.itinerary._id
+      
+      if (isTempId) {
+        // 临时ID的攻略需要先保存到数据库
+        console.log('检测到临时ID，先保存攻略到数据库...')
+        
+        // 提示用户
+        const confirmSave = confirm('此攻略尚未保存到数据库，需要先保存才能收藏。是否继续？')
+        if (!confirmSave) {
+          savingCollection.value = false
+          return
+        }
+        
+        // 调用API保存攻略
+        const itineraryAPI = await import('@/api/itinerary')
+        const saveResponse = await itineraryAPI.itineraryAPI.generate({
+          destination: props.itinerary.destination,
+          days: props.itinerary.days,
+          budget: props.itinerary.budget,
+          preferences: props.itinerary.preferences || []
+        })
+        
+        const savedItinerary = (saveResponse.data as any).data || saveResponse.data
+        console.log('攻略已保存到数据库，ID:', savedItinerary._id)
+        
+        // 使用新的ID
+        itineraryId = savedItinerary._id
+        
+        // 更新 store 中的攻略
+        const { useItineraryStore } = await import('@/stores/itinerary')
+        const itineraryStore = useItineraryStore()
+        itineraryStore.setCurrentItinerary(savedItinerary)
+      }
+      
+      // 添加收藏
+      const response = await collectionAPI.add(itineraryId, 'itinerary')
       const data = (response.data as any).data
       isCollected.value = true
       collectionId.value = data._id
       emit('saved')
     }
-  } catch (error) {
+  } catch (error: any) {
     console.error('Failed to save collection:', error)
+    const errorMessage = error.response?.data?.message || error.message || '收藏失败'
+    alert(`收藏失败：${errorMessage}`)
   } finally {
     savingCollection.value = false
   }
