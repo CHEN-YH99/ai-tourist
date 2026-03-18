@@ -4,7 +4,16 @@ import type { ApiResponse } from '@/types'
 // Create axios instance
 const client: AxiosInstance = axios.create({
   baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
-  timeout: 10000,
+  timeout: 30000, // Increase default timeout to 30 seconds
+  headers: {
+    'Content-Type': 'application/json'
+  }
+})
+
+// Create a separate client for AI/chat requests with longer timeout
+export const chatClient: AxiosInstance = axios.create({
+  baseURL: import.meta.env.VITE_API_BASE_URL || '/api',
+  timeout: 60000, // 60 seconds for AI requests
   headers: {
     'Content-Type': 'application/json'
   }
@@ -73,6 +82,20 @@ client.interceptors.request.use(
   }
 )
 
+// Apply same interceptors to chatClient
+chatClient.interceptors.request.use(
+  (config) => {
+    const token = localStorage.getItem('token')
+    if (token) {
+      config.headers.Authorization = `Bearer ${token}`
+    }
+    return config
+  },
+  (error) => {
+    return Promise.reject(error)
+  }
+)
+
 // Response interceptor - handle errors
 client.interceptors.response.use(
   (response: AxiosResponse<ApiResponse<any>>) => {
@@ -103,14 +126,54 @@ client.interceptors.response.use(
     } else if (statusCode && statusCode >= 400) {
       // Handle client errors
       toastNotifier?.(errorMessage, 'error', '请求错误')
-    } else if (error.code === 'ECONNABORTED') {
+    } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
       // Handle timeout
-      toastNotifier?.('请求超时，请检查网络连接', 'error', '连接超时')
+      toastNotifier?.('AI 服务响应超时，请稍后重试', 'error', '请求超时')
     } else if (error.message === 'Network Error') {
       // Handle network errors
       toastNotifier?.('网络连接失败，请检查您的网络', 'error', '网络错误')
     } else {
       // Handle other errors
+      toastNotifier?.(errorMessage, 'error', '错误')
+    }
+
+    return Promise.reject({
+      status: statusCode,
+      message: errorMessage,
+      data: error.response?.data
+    })
+  }
+)
+
+// Apply same response interceptor to chatClient
+chatClient.interceptors.response.use(
+  (response: AxiosResponse<ApiResponse<any>>) => {
+    return response
+  },
+  (error: AxiosError<ApiResponse<any>>) => {
+    const errorMessage = extractErrorMessage(error)
+    const statusCode = error.response?.status
+
+    if (statusCode === 401) {
+      localStorage.removeItem('token')
+      localStorage.removeItem('user')
+      toastNotifier?.(errorMessage, 'error', '认证失败')
+      setTimeout(() => {
+        window.location.href = '/login'
+      }, 1000)
+    } else if (statusCode === 403) {
+      toastNotifier?.(errorMessage, 'error', '权限不足')
+    } else if (statusCode === 429) {
+      toastNotifier?.(errorMessage, 'warning', '请求过于频繁')
+    } else if (statusCode && statusCode >= 500) {
+      toastNotifier?.(errorMessage, 'error', '服务器错误')
+    } else if (statusCode && statusCode >= 400) {
+      toastNotifier?.(errorMessage, 'error', '请求错误')
+    } else if (error.code === 'ECONNABORTED' || error.message.includes('timeout')) {
+      toastNotifier?.('AI 服务响应超时，请稍后重试或检查后端服务状态', 'error', '请求超时')
+    } else if (error.message === 'Network Error') {
+      toastNotifier?.('网络连接失败，请检查您的网络', 'error', '网络错误')
+    } else {
       toastNotifier?.(errorMessage, 'error', '错误')
     }
 

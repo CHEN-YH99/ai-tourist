@@ -1,9 +1,9 @@
-import client from './client'
+import client, { chatClient } from './client'
 import type { Conversation, ApiResponse, PaginatedResponse } from '@/types'
 
 export const chatAPI = {
   sendMessage(data: { message: string; conversationId?: string }) {
-    return client.post<ApiResponse<{ conversationId: string; message: string; timestamp: Date }>>(
+    return chatClient.post<ApiResponse<{ conversationId: string; message: string; timestamp: Date }>>(
       '/chat',
       data
     )
