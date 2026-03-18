@@ -17,6 +17,13 @@ interface PaginatedResponse<T> {
   pageSize: number;
 }
 
+interface GenerationHistory {
+  id: string;
+  params: ItineraryParams;
+  timestamp: number;
+  itinerary?: Itinerary;
+}
+
 export const useItineraryStore = defineStore('itinerary', () => {
   // State
   const itineraries = ref<Itinerary[]>([]);
@@ -25,6 +32,60 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const loading = ref(false);
   const chatParams = ref<ItineraryParams | null>(null);
   const chatContent = ref<{ aiContent: string; userQuestion: string } | null>(null);
+  const generationHistory = ref<GenerationHistory[]>([]);
+
+  // Load generation history from localStorage
+  const loadGenerationHistory = () => {
+    try {
+      const stored = localStorage.getItem('itineraryGenerationHistory');
+      if (stored) {
+        generationHistory.value = JSON.parse(stored);
+      }
+    } catch (error) {
+      console.error('Failed to load generation history:', error);
+      generationHistory.value = [];
+    }
+  };
+
+  // Save generation history to localStorage
+  const saveGenerationHistory = () => {
+    try {
+      localStorage.setItem('itineraryGenerationHistory', JSON.stringify(generationHistory.value));
+    } catch (error) {
+      console.error('Failed to save generation history:', error);
+    }
+  };
+
+  // Add to generation history
+  const addToHistory = (params: ItineraryParams, itinerary?: Itinerary) => {
+    const historyItem: GenerationHistory = {
+      id: Date.now().toString(),
+      params,
+      timestamp: Date.now(),
+      itinerary
+    };
+    
+    generationHistory.value.unshift(historyItem);
+    
+    // Keep only last 20 items
+    if (generationHistory.value.length > 20) {
+      generationHistory.value = generationHistory.value.slice(0, 20);
+    }
+    
+    saveGenerationHistory();
+  };
+
+  // Delete history item
+  const deleteHistoryItem = (id: string) => {
+    generationHistory.value = generationHistory.value.filter(item => item.id !== id);
+    saveGenerationHistory();
+  };
+
+  // Clear all history
+  const clearHistory = () => {
+    generationHistory.value = [];
+    saveGenerationHistory();
+  };
 
   // Actions
   async function generateItinerary(params: ItineraryParams) {
@@ -34,6 +95,10 @@ export const useItineraryStore = defineStore('itinerary', () => {
       // Handle nested data structure from API
       const itineraryData = (response.data as any).data || response.data;
       currentItinerary.value = itineraryData as Itinerary;
+      
+      // Add to history
+      addToHistory(params, itineraryData as Itinerary);
+      
       return itineraryData;
     } catch (error) {
       console.error('Failed to generate itinerary:', error);
@@ -108,6 +173,9 @@ export const useItineraryStore = defineStore('itinerary', () => {
     chatContent.value = null;
   }
 
+  // Load history on store initialization
+  loadGenerationHistory();
+
   return {
     itineraries,
     currentItinerary,
@@ -115,12 +183,16 @@ export const useItineraryStore = defineStore('itinerary', () => {
     loading,
     chatParams,
     chatContent,
+    generationHistory,
     generateItinerary,
     loadItineraries,
     loadItinerary,
     deleteItinerary,
     setItineraryFromChat,
     setCurrentItinerary,
-    clearChatData
+    clearChatData,
+    deleteHistoryItem,
+    clearHistory,
+    addToHistory
   };
 });

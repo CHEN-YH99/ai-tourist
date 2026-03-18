@@ -260,34 +260,40 @@ function useTemplate(text: string) {
   gap: 0.75rem;
   padding: 1.5rem;
   border-top: 1px solid #e2e8f0;
-  background: white;
+  background: linear-gradient(to bottom, #ffffff, #f8fafc);
   align-items: center;
+  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
 }
 
 .template-toggle-btn {
-  background: none;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  background: white;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   padding: 0.75rem;
   cursor: pointer;
   color: #718096;
-  transition: all 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .template-toggle-btn:hover {
   background: #f7fafc;
   border-color: #667eea;
   color: #667eea;
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
 }
 
 .template-toggle-btn.active {
   background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
   border-color: #667eea;
   color: white;
+  transform: scale(1.05);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 .template-toggle-btn svg {
@@ -297,29 +303,46 @@ function useTemplate(text: string) {
 
 .message-input {
   flex: 1;
-  padding: 0.75rem 1rem;
-  border: 1px solid #e2e8f0;
-  border-radius: 8px;
+  padding: 0.875rem 1.25rem;
+  border: 2px solid #e2e8f0;
+  border-radius: 12px;
   font-size: 1rem;
   font-family: inherit;
-  transition: border-color 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  background: white;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
 }
 
 .message-input:focus {
   outline: none;
   border-color: #667eea;
-  box-shadow: 0 0 0 3px rgba(102, 126, 234, 0.1);
+  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);
+  transform: translateY(-1px);
 }
 
 .message-input:disabled {
   background-color: #f7fafc;
   color: #a0aec0;
   cursor: not-allowed;
+  box-shadow: none;
+}
+
+.message-input::placeholder {
+  color: #a0aec0;
+  font-style: italic;
 }
 
 .send-button {
   white-space: nowrap;
   flex-shrink: 0;
+  border-radius: 12px;
+  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+}
+
+.send-button:hover:not(:disabled) {
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
 }
 
 @media (max-width: 768px) {

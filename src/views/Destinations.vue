@@ -192,8 +192,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, onMounted } from 'vue'
-import { useRouter } from 'vue-router'
+import { ref, computed, onMounted, watch } from 'vue'
+import { useRouter, useRoute } from 'vue-router'
 import type { Destination, DestinationFilters } from '@/types'
 import { useDestinationStore } from '@/stores/destination'
 import DestinationCard from '@/components/DestinationCard.vue'
@@ -203,6 +203,7 @@ import Button from '@/components/ui/Button.vue'
 import VirtualList from '@/components/VirtualList.vue'
 
 const router = useRouter()
+const route = useRoute()
 const destinationStore = useDestinationStore()
 
 const searchQuery = ref('')
@@ -229,6 +230,20 @@ const displayedDestinations = computed(() => {
 
   return results
 })
+
+// Watch for query parameter changes (from search)
+watch(() => route.query.id, async (newId) => {
+  if (newId && typeof newId === 'string') {
+    try {
+      await destinationStore.loadDestination(newId)
+      if (destinationStore.selectedDestination) {
+        selectedDestination.value = destinationStore.selectedDestination
+      }
+    } catch (error) {
+      console.error('Failed to load destination from query:', error)
+    }
+  }
+}, { immediate: true })
 
 onMounted(async () => {
   await applyFilters()
@@ -277,6 +292,10 @@ function selectDestination(destination: Destination) {
 
 function closeDetail() {
   selectedDestination.value = null
+  // Clear query parameter
+  if (route.query.id) {
+    router.replace({ query: {} })
+  }
 }
 
 function handleGenerateItinerary() {
