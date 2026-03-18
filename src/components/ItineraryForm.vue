@@ -103,7 +103,8 @@
 </template>
 
 <script setup lang="ts">
-import { ref, reactive } from 'vue'
+import { ref, reactive, onMounted, watch } from 'vue'
+import { useItineraryStore } from '@/stores/itinerary'
 import type { ItineraryParams } from '@/types'
 import Card from '@/components/ui/Card.vue'
 import Input from '@/components/ui/Input.vue'
@@ -134,6 +135,8 @@ const emit = defineEmits<{
   submit: [data: ItineraryParams]
 }>()
 
+const itineraryStore = useItineraryStore()
+
 const availablePreferences = [
   '美食',
   '文化',
@@ -153,6 +156,30 @@ const formData = reactive<FormData>({
 })
 
 const errors = reactive<FormErrors>({})
+
+// 从chat参数自动填充表单
+onMounted(() => {
+  if (itineraryStore.chatParams) {
+    formData.destination = itineraryStore.chatParams.destination || ''
+    formData.days = itineraryStore.chatParams.days || 3
+    formData.budget = itineraryStore.chatParams.budget || 5000
+    formData.preferences = itineraryStore.chatParams.preferences || []
+    
+    console.log('从聊天自动填充表单:', formData)
+  }
+})
+
+// 监听chatParams变化
+watch(() => itineraryStore.chatParams, (newParams) => {
+  if (newParams) {
+    formData.destination = newParams.destination || ''
+    formData.days = newParams.days || 3
+    formData.budget = newParams.budget || 5000
+    formData.preferences = newParams.preferences || []
+    
+    console.log('表单已更新:', formData)
+  }
+}, { deep: true })
 
 function validateField(field: keyof FormData) {
   // Clear error for this field

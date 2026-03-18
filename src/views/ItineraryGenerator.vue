@@ -75,7 +75,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onUnmounted } from 'vue'
 import { useItineraryStore } from '@/stores/itinerary'
 import type { ItineraryParams } from '@/types'
 import ItineraryForm from '@/components/ItineraryForm.vue'
@@ -87,6 +87,12 @@ import SkeletonLoader from '@/components/SkeletonLoader.vue'
 const itineraryStore = useItineraryStore()
 const error = ref<string | null>(null)
 const lastParams = ref<ItineraryParams | null>(null)
+
+// 清理函数：离开页面时清除聊天数据
+onUnmounted(() => {
+  // 不清除chatContent，这样用户可以返回查看
+  // itineraryStore.clearChatData()
+})
 
 async function handleGenerateItinerary(params: ItineraryParams) {
   console.log('handleGenerateItinerary called with params:', params)

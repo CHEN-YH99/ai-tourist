@@ -23,6 +23,8 @@ export const useItineraryStore = defineStore('itinerary', () => {
   const currentItinerary = ref<Itinerary | null>(null);
   const generating = ref(false);
   const loading = ref(false);
+  const chatParams = ref<ItineraryParams | null>(null);
+  const chatContent = ref<{ aiContent: string; userQuestion: string } | null>(null);
 
   // Actions
   async function generateItinerary(params: ItineraryParams) {
@@ -85,14 +87,40 @@ export const useItineraryStore = defineStore('itinerary', () => {
     }
   }
 
+  function setItineraryFromChat(data: {
+    params: ItineraryParams;
+    aiContent: string;
+    userQuestion: string;
+  }) {
+    chatParams.value = data.params;
+    chatContent.value = {
+      aiContent: data.aiContent,
+      userQuestion: data.userQuestion
+    };
+  }
+
+  function setCurrentItinerary(itinerary: Itinerary) {
+    currentItinerary.value = itinerary;
+  }
+
+  function clearChatData() {
+    chatParams.value = null;
+    chatContent.value = null;
+  }
+
   return {
     itineraries,
     currentItinerary,
     generating,
     loading,
+    chatParams,
+    chatContent,
     generateItinerary,
     loadItineraries,
     loadItinerary,
-    deleteItinerary
+    deleteItinerary,
+    setItineraryFromChat,
+    setCurrentItinerary,
+    clearChatData
   };
 });
