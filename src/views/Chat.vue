@@ -95,7 +95,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed, nextTick, onMounted } from 'vue'
+import { ref, computed, nextTick, onMounted, watch } from 'vue'
 import { useChatStore } from '@/stores/chat'
 import { useAuthStore } from '@/stores/auth'
 import ChatMessage from '@/components/ChatMessage.vue'
@@ -111,6 +111,23 @@ const conversations = computed(() => chatStore.conversations)
 const currentConversation = computed(() => chatStore.currentConversation)
 const sending = computed(() => chatStore.sending)
 const isAuthenticated = computed(() => authStore.isAuthenticated)
+
+// Watch for message changes and auto-scroll
+watch(
+  () => currentConversation.value?.messages?.length,
+  async () => {
+    await nextTick()
+    await scrollToBottom()
+  }
+)
+
+// Watch for sending state changes to scroll when typing indicator appears
+watch(sending, async (newVal) => {
+  if (newVal) {
+    await nextTick()
+    await scrollToBottom()
+  }
+})
 
 onMounted(async () => {
   // Only load conversations if user is authenticated
@@ -143,7 +160,6 @@ async function loadMoreConversations() {
 async function handleSendMessage(message: string) {
   try {
     await chatStore.sendMessage(message, currentConversation.value?._id)
-    await scrollToBottom()
   } catch (error) {
     console.error('Failed to send message:', error)
   }
@@ -186,7 +202,10 @@ function getConversationPreview(conversation: any): string {
 async function scrollToBottom() {
   await nextTick()
   if (messagesContainer.value) {
-    messagesContainer.value.scrollTop = messagesContainer.value.scrollHeight
+    messagesContainer.value.scrollTo({
+      top: messagesContainer.value.scrollHeight,
+      behavior: 'smooth'
+    })
   }
 }
 </script>

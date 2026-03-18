@@ -31,7 +31,31 @@ export const useChatStore = defineStore('chat', () => {
 
   // Actions
   async function sendMessage(text: string, conversationId?: string) {
+    // Initialize conversation if needed
+    if (!currentConversation.value) {
+      currentConversation.value = {
+        _id: conversationId || '',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as Conversation;
+    }
+
+    // Ensure messages array exists
+    if (!currentConversation.value.messages) {
+      currentConversation.value.messages = [];
+    }
+
+    // Immediately add user message to UI
+    currentConversation.value.messages.push({
+      role: 'user',
+      content: text,
+      timestamp: new Date()
+    });
+
+    // Set sending state to show typing indicator
     sending.value = true;
+
     try {
       // Only pass conversationId if it's a valid MongoDB ObjectId (24 hex chars)
       const isValidObjectId = conversationId && /^[0-9a-f]{24}$/i.test(conversationId);
@@ -43,28 +67,12 @@ export const useChatStore = defineStore('chat', () => {
       
       const data = response.data?.data || response.data;
 
-      if (!currentConversation.value) {
-        currentConversation.value = {
-          _id: data.conversationId, // Use the ID returned from server
-          messages: [],
-          createdAt: new Date(),
-          updatedAt: new Date()
-        } as Conversation;
+      // Update conversation ID if it's a new conversation
+      if (data.conversationId && currentConversation.value._id !== data.conversationId) {
+        currentConversation.value._id = data.conversationId;
       }
 
-      // Ensure messages array exists
-      if (!currentConversation.value.messages) {
-        currentConversation.value.messages = [];
-      }
-
-      // 添加用户消息
-      currentConversation.value.messages.push({
-        role: 'user',
-        content: text,
-        timestamp: new Date()
-      });
-
-      // 添加 AI 回复，确保内容有效
+      // Add AI reply
       currentConversation.value.messages.push({
         role: 'assistant',
         content: data.message,
@@ -74,6 +82,15 @@ export const useChatStore = defineStore('chat', () => {
       return data;
     } catch (error) {
       console.error('Failed to send message:', error);
+      
+      // Remove the user message if request failed
+      if (currentConversation.value.messages.length > 0) {
+        const lastMessage = currentConversation.value.messages[currentConversation.value.messages.length - 1];
+        if (lastMessage.role === 'user' && lastMessage.content === text) {
+          currentConversation.value.messages.pop();
+        }
+      }
+      
       throw error;
     } finally {
       sending.value = false;
