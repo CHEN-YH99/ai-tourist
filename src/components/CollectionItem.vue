@@ -69,9 +69,13 @@ const removing = ref(false)
 const itemType = computed(() => props.collection.itemType)
 
 const itemTitle = computed(() => {
+  if (!props.item || Object.keys(props.item).length === 0) {
+    return '加载中...'
+  }
+  
   if (itemType.value === 'itinerary') {
     const itinerary = props.item as Itinerary
-    return `${itinerary.destination} - ${itinerary.days}天行程`
+    return `${itinerary.destination || '未知目的地'} - ${itinerary.days || 0}天行程`
   } else {
     const conversation = props.item as Conversation
     return conversation.title || '对话记录'
@@ -79,11 +83,19 @@ const itemTitle = computed(() => {
 })
 
 const itemPreview = computed(() => {
+  if (!props.item || Object.keys(props.item).length === 0) {
+    return '加载中...'
+  }
+  
   if (itemType.value === 'itinerary') {
     const itinerary = props.item as Itinerary
-    return `预算: ¥${itinerary.budget.toLocaleString()} | 偏好: ${itinerary.preferences.join(', ') || '无'}`
+    if (!itinerary.budget) return '数据加载中...'
+    return `预算: ¥${itinerary.budget.toLocaleString()} | 偏好: ${itinerary.preferences?.join(', ') || '无'}`
   } else {
     const conversation = props.item as Conversation
+    if (!conversation.messages || conversation.messages.length === 0) {
+      return '无消息'
+    }
     const lastMessage = conversation.messages[conversation.messages.length - 1]
     return lastMessage?.content || '无消息'
   }

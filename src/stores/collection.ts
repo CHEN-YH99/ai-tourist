@@ -19,9 +19,10 @@ export const useCollectionStore = defineStore('collection', () => {
     loading.value = true;
     try {
       const response = await collectionAPI.getList(type);
-      collections.value = response.data as Collection[];
+      collections.value = (response.data as any).data || [];
     } catch (error) {
       console.error('Failed to load collections:', error);
+      collections.value = [];
       throw error;
     } finally {
       loading.value = false;
@@ -31,7 +32,7 @@ export const useCollectionStore = defineStore('collection', () => {
   async function addToCollection(itemId: string, itemType: CollectionType) {
     try {
       const response = await collectionAPI.add(itemId, itemType);
-      const newCollection = response.data as Collection;
+      const newCollection = (response.data as any).data as Collection;
       collections.value.unshift(newCollection);
       return newCollection;
     } catch (error) {
@@ -53,7 +54,7 @@ export const useCollectionStore = defineStore('collection', () => {
   async function isCollected(itemId: string): Promise<boolean> {
     try {
       const response = await collectionAPI.check(itemId);
-      const data = response.data as CollectionCheckResponse;
+      const data = (response.data as any).data as CollectionCheckResponse;
       return data.isCollected;
     } catch (error) {
       console.error('Failed to check collection status:', error);

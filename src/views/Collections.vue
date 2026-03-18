@@ -146,7 +146,12 @@ onMounted(async () => {
 })
 
 function getCollectionItem(collection: Collection): Itinerary | Conversation {
-  return itemsMap.get(collection.itemId) || ({} as any)
+  // 如果 itemId 已经是 populated 的对象，直接返回
+  if (typeof collection.itemId === 'object' && collection.itemId !== null) {
+    return collection.itemId as Itinerary | Conversation
+  }
+  // 否则从 map 中查找（fallback）
+  return itemsMap.get(collection.itemId as string) || ({} as any)
 }
 
 async function handleRemove(collectionId: string) {

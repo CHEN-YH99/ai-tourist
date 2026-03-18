@@ -145,7 +145,7 @@ export type CollectionType = 'itinerary' | 'conversation'
 export interface Collection {
   _id: string
   userId: string
-  itemId: string
+  itemId: string | Itinerary | Conversation  // 可以是 ID 或 populated 的对象
   itemType: CollectionType
   createdAt: Date
 }

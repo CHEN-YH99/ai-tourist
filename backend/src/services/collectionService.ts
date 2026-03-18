@@ -77,7 +77,7 @@ export class CollectionService {
   async getUserCollections(
     userId: string,
     type?: CollectionType
-  ): Promise<ICollection[]> {
+  ): Promise<any[]> {
     const query: any = {
       userId: new mongoose.Types.ObjectId(userId),
     };
@@ -90,10 +90,28 @@ export class CollectionService {
     // 按收藏时间倒序返回
     const collections = await Collection.find(query)
       .sort({ createdAt: -1 })
-      .populate('itemId')
+      .lean()
       .exec();
 
-    return collections;
+    // 手动 populate itemId，因为它可以引用不同的 model
+    const populatedCollections = await Promise.all(
+      collections.map(async (collection) => {
+        let itemData = null;
+        
+        if (collection.itemType === 'itinerary') {
+          itemData = await Itinerary.findById(collection.itemId).lean();
+        } else if (collection.itemType === 'conversation') {
+          itemData = await Conversation.findById(collection.itemId).lean();
+        }
+        
+        return {
+          ...collection,
+          itemId: itemData || collection.itemId, // 如果找不到，保留原 ID
+        };
+      })
+    );
+
+    return populatedCollections;
   }
 
   /**
