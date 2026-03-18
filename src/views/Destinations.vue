@@ -16,7 +16,7 @@
           <input
             v-model="searchQuery"
             type="text"
-            placeholder="搜索目的地名称..."
+            placeholder="搜索目的地名称、地区、国家、类型..."
             class="w-full px-4 py-2 pl-10 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent text-sm"
             @input="handleSearch"
           />
@@ -218,16 +218,74 @@ const selectedDestination = ref<Destination | null>(null)
 const displayedDestinations = computed(() => {
   let results = destinationStore.destinations
 
-  // Apply search filter
+  console.log('Total destinations from store:', results.length)
+
+  // Apply search filter - enhanced with more fields
   if (searchQuery.value.trim()) {
     const query = searchQuery.value.toLowerCase().trim()
-    results = results.filter(dest => 
-      dest.name.toLowerCase().includes(query) ||
-      dest.description?.toLowerCase().includes(query) ||
-      dest.country?.toLowerCase().includes(query)
-    )
+    console.log('Searching for:', query)
+    
+    results = results.filter(dest => {
+      // Search in name
+      if (dest.name.toLowerCase().includes(query)) return true
+      
+      // Search in description
+      if (dest.description?.toLowerCase().includes(query)) return true
+      
+      // Search in country
+      if (dest.country?.toLowerCase().includes(query)) return true
+      
+      // Search in region
+      if (dest.region?.toLowerCase().includes(query)) return true
+      
+      // Search in types array
+      if (dest.type && Array.isArray(dest.type)) {
+        if (dest.type.some(t => t.toLowerCase().includes(query))) return true
+      }
+      
+      // Search in attractions
+      if (dest.attractions && Array.isArray(dest.attractions)) {
+        if (dest.attractions.some(a => 
+          a.name.toLowerCase().includes(query) || 
+          a.description?.toLowerCase().includes(query)
+        )) return true
+      }
+      
+      return false
+    })
+    
+    console.log('After search filter:', results.length)
   }
 
+  // Apply region filter
+  if (filters.value.region) {
+    console.log('Filtering by region:', filters.value.region)
+    results = results.filter(dest => dest.region === filters.value.region)
+    console.log('After region filter:', results.length)
+  }
+
+  // Apply type filter
+  if (filters.value.type) {
+    console.log('Filtering by type:', filters.value.type)
+    results = results.filter(dest => 
+      dest.type && Array.isArray(dest.type) && dest.type.includes(filters.value.type)
+    )
+    console.log('After type filter:', results.length)
+  }
+
+  // Apply sorting
+  if (filters.value.sortBy === 'name') {
+    results = [...results].sort((a, b) => a.name.localeCompare(b.name, 'zh-CN'))
+  } else if (filters.value.sortBy === 'budget') {
+    results = [...results].sort((a, b) => {
+      const budgetA = a.averageBudget?.min || 0
+      const budgetB = b.averageBudget?.min || 0
+      return budgetA - budgetB
+    })
+  }
+  // popularity is default from backend
+
+  console.log('Final results:', results.length)
   return results
 })
 
@@ -265,6 +323,7 @@ async function applyFilters() {
   }
 
   try {
+    // Load all destinations first, then apply filters in computed property
     await destinationStore.loadDestinations(filterParams)
   } catch (error: unknown) {
     console.error('Failed to load destinations:', error)

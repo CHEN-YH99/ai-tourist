@@ -105,11 +105,23 @@ watch(searchQuery, async (newQuery) => {
       const query = newQuery.toLowerCase().trim()
       
       destinationSuggestions.value = destinationStore.destinations
-        .filter(dest => 
-          dest.name.toLowerCase().includes(query) ||
-          dest.region?.toLowerCase().includes(query) ||
-          dest.type?.toLowerCase().includes(query)
-        )
+        .filter(dest => {
+          // Search in name
+          if (dest.name.toLowerCase().includes(query)) return true
+          
+          // Search in region
+          if (dest.region?.toLowerCase().includes(query)) return true
+          
+          // Search in type array
+          if (dest.type && Array.isArray(dest.type)) {
+            if (dest.type.some(t => t.toLowerCase().includes(query))) return true
+          }
+          
+          // Search in country
+          if (dest.country?.toLowerCase().includes(query)) return true
+          
+          return false
+        })
         .slice(0, 5)
     } catch (error) {
       console.error('Failed to load destination suggestions:', error)

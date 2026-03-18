@@ -4,25 +4,25 @@ import type { SearchResults, SearchFilters, Destination, Itinerary, Conversation
 export const searchAPI = {
   search(query: string, filters?: SearchFilters) {
     return client.get<ApiResponse<SearchResults>>('/search', {
-      params: { query, ...filters }
+      params: { q: query, ...filters }
     })
   },
 
   searchDestinations(query: string) {
     return client.get<ApiResponse<Destination[]>>('/search/destinations', {
-      params: { query }
+      params: { q: query }
     })
   },
 
   searchItineraries(query: string) {
     return client.get<ApiResponse<Itinerary[]>>('/search/itineraries', {
-      params: { query }
+      params: { q: query }
     })
   },
 
   searchConversations(query: string) {
     return client.get<ApiResponse<Conversation[]>>('/search/conversations', {
-      params: { query }
+      params: { q: query }
     })
   }
 }

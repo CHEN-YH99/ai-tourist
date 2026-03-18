@@ -392,18 +392,28 @@ async function handleAddToDestination() {
       images: ['/placeholder-destination.jpg'], // 默认图片
       attractions: attractions.slice(0, 10).map(a => ({
         name: a.name,
-        description: a.description
-      })), // 最多取10个景点，只保留必需字段
+        description: a.description,
+        ticketPrice: a.cost || 0,
+        openingHours: '全天'
+      })), // 最多取10个景点
       bestTimeToVisit: props.itinerary.preferences.includes('避开旺季') ? '淡季' : '全年',
-      averageBudget: avgBudget,
+      averageBudget: {
+        min: avgBudget.min,
+        max: avgBudget.max,
+        currency: 'CNY' // 添加货币字段
+      },
       tips: [
         `推荐行程天数：${props.itinerary.days}天`,
         `预算范围：¥${avgBudget.min.toLocaleString()} - ¥${avgBudget.max.toLocaleString()}`,
         ...props.itinerary.preferences.map(p => `适合${p}爱好者`)
       ],
-      type: types
+      type: types,
+      climate: '温和', // 添加默认气候
+      transportation: '公共交通便利' // 添加默认交通信息
     }
 
+    console.log('创建目的地数据:', destinationData)
+    
     await destinationAPI.create(destinationData)
     
     alert(`成功添加"${props.itinerary.destination}"到目的地！`)

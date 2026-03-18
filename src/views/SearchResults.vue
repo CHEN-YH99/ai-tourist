@@ -231,13 +231,21 @@ async function performSearch() {
     const response = await searchAPI.search(query, {
       type: selectedType.value || undefined
     })
-    const data = response.data as any
+    
+    // 后端返回格式: { status: 'success', data: { destinations, itineraries, conversations, total } }
+    const data = response.data.data || response.data
+    
+    console.log('Search response:', response.data)
+    console.log('Search data:', data)
+    
     searchResults.value = {
       destinations: data.destinations || [],
       itineraries: data.itineraries || [],
       conversations: data.conversations || [],
       total: data.total || 0
     }
+    
+    console.log('Search results:', searchResults.value)
   } catch (error) {
     console.error('Search failed:', error)
   } finally {

@@ -48,8 +48,9 @@ const DestinationSchema = new Schema<IDestination>(
     name: {
       type: String,
       required: true,
-      unique: true,
       trim: true,
+      // 移除 unique 约束，允许多个同名目的地
+      // unique: true,
     },
     nameEn: {
       type: String,
