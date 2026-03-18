@@ -89,15 +89,18 @@ const error = ref<string | null>(null)
 const lastParams = ref<ItineraryParams | null>(null)
 
 async function handleGenerateItinerary(params: ItineraryParams) {
+  console.log('handleGenerateItinerary called with params:', params)
   error.value = null
   lastParams.value = params
 
   try {
+    console.log('Calling itineraryStore.generateItinerary...')
     await itineraryStore.generateItinerary(params)
+    console.log('Itinerary generated successfully')
   } catch (err) {
+    console.error('Failed to generate itinerary:', err)
     const errorMessage = err instanceof Error ? err.message : '生成攻略失败，请重试'
     error.value = errorMessage
-    console.error('Failed to generate itinerary:', err)
   }
 }
 

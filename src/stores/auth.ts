@@ -25,6 +25,7 @@ export const useAuthStore = defineStore('auth', () => {
   const user = ref<UserProfile | null>(null);
   const loading = ref(false);
   const initialized = ref(false);
+  const initPromise = ref<Promise<void> | null>(null);
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value);
@@ -47,6 +48,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       token.value = authData.token;
       user.value = authData.user;
+      initialized.value = true; // Mark as initialized after successful login
       localStorage.setItem('token', authData.token);
       
       console.log('Auth store updated:', { 
@@ -77,6 +79,7 @@ export const useAuthStore = defineStore('auth', () => {
       
       token.value = authData.token;
       user.value = authData.user;
+      initialized.value = true; // Mark as initialized after successful registration
       localStorage.setItem('token', authData.token);
       
       console.log('Auth store updated:', { 
@@ -94,6 +97,8 @@ export const useAuthStore = defineStore('auth', () => {
   async function logout() {
     token.value = null;
     user.value = null;
+    initialized.value = false;
+    initPromise.value = null;
     localStorage.removeItem('token');
   }
 
@@ -120,21 +125,36 @@ export const useAuthStore = defineStore('auth', () => {
 
   // Initialize user data if token exists
   async function initialize() {
-    if (initialized.value) return;
-    initialized.value = true;
-    
-    console.log('Initializing auth store, token exists:', !!token.value);
-    
-    if (token.value && !user.value) {
-      try {
-        await fetchProfile();
-        console.log('Profile fetched successfully:', user.value);
-      } catch (error) {
-        console.error('Failed to initialize auth:', error);
-      }
-    } else {
-      console.log('Skip initialization:', { hasToken: !!token.value, hasUser: !!user.value });
+    // If already initialized, return immediately
+    if (initialized.value) {
+      return;
     }
+    
+    // If initialization is in progress, wait for it
+    if (initPromise.value) {
+      return initPromise.value;
+    }
+    
+    // Start initialization
+    initPromise.value = (async () => {
+      console.log('Initializing auth store, token exists:', !!token.value);
+      
+      if (token.value && !user.value) {
+        try {
+          await fetchProfile();
+          console.log('Profile fetched successfully:', user.value);
+        } catch (error) {
+          console.error('Failed to initialize auth:', error);
+        }
+      } else {
+        console.log('Skip initialization:', { hasToken: !!token.value, hasUser: !!user.value });
+      }
+      
+      initialized.value = true;
+      initPromise.value = null;
+    })();
+    
+    return initPromise.value;
   }
 
   async function updateProfile(data: Partial<UserProfile>) {

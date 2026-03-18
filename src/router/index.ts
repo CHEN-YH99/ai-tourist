@@ -72,9 +72,12 @@ const router = createRouter({
 })
 
 // Route guard for authentication
-router.beforeEach((to, from, next) => {
+router.beforeEach(async (to, from, next) => {
   const authStore = useAuthStore()
   const requiresAuth = to.meta.requiresAuth
+
+  // Wait for auth store to initialize if it hasn't yet
+  await authStore.initialize()
 
   if (requiresAuth && !authStore.isAuthenticated) {
     // Redirect to login if route requires auth and user is not authenticated

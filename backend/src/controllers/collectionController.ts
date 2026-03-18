@@ -139,12 +139,13 @@ export async function checkCollection(req: AuthRequest, res: Response) {
     const userId = req.userId!;
     const itemId = req.params.id;
 
-    const isCollected = await collectionService.isCollected(userId, itemId);
+    const collection = await collectionService.getCollectionByItemId(userId, itemId);
 
     res.json({
       status: 'success',
       data: {
-        isCollected,
+        isCollected: !!collection,
+        collection: collection || null,
       },
     });
   } catch (error) {

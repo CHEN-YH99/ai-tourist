@@ -91,10 +91,10 @@
             type="submit"
             variant="primary"
             size="lg"
-            :loading="isLoading"
+            :loading="loading"
             class="w-full"
           >
-            {{ isLoading ? '生成中...' : '生成攻略' }}
+            {{ loading ? '生成中...' : '生成攻略' }}
           </Button>
         </div>
       </form>
@@ -153,61 +153,85 @@ const formData = reactive<FormData>({
 })
 
 const errors = reactive<FormErrors>({})
-const isLoading = ref(false)
 
 function validateField(field: keyof FormData) {
-  errors[field as keyof FormErrors] = undefined
+  // Clear error for this field
+  delete errors[field as keyof FormErrors]
 
   if (field === 'destination') {
-    if (!formData.destination.trim()) {
+    if (!formData.destination || !formData.destination.trim()) {
       errors.destination = '请输入目的地'
-    } else if (formData.destination.trim().length < 2) {
+      return
+    }
+    if (formData.destination.trim().length < 2) {
       errors.destination = '目的地至少需要2个字符'
+      return
     }
   }
 
   if (field === 'days') {
-    if (!formData.days) {
+    if (!formData.days || formData.days === 0) {
       errors.days = '请输入旅行天数'
-    } else if (formData.days < 1 || formData.days > 30) {
+      return
+    }
+    if (formData.days < 1 || formData.days > 30) {
       errors.days = '旅行天数必须在1-30天之间'
-    } else if (!Number.isInteger(formData.days)) {
+      return
+    }
+    if (!Number.isInteger(formData.days)) {
       errors.days = '旅行天数必须是整数'
+      return
     }
   }
 
   if (field === 'budget') {
-    if (formData.budget === undefined || formData.budget === null) {
+    if (formData.budget === undefined || formData.budget === null || formData.budget === 0) {
       errors.budget = '请输入预算'
-    } else if (formData.budget < 0) {
+      return
+    }
+    if (formData.budget < 0) {
       errors.budget = '预算不能为负数'
+      return
     }
   }
 }
 
 function validateForm(): boolean {
-  Object.keys(formData).forEach(field => {
-    validateField(field as keyof FormData)
+  // Clear all errors
+  Object.keys(errors).forEach(key => {
+    delete errors[key as keyof FormErrors]
   })
-  return Object.keys(errors).length === 0
+  
+  // Validate all required fields
+  validateField('destination')
+  validateField('days')
+  validateField('budget')
+  
+  const hasErrors = Object.keys(errors).length > 0
+  console.log('Form validation:', { 
+    formData: { ...formData }, 
+    errors: { ...errors }, 
+    hasErrors 
+  })
+  
+  return !hasErrors
 }
 
-async function handleSubmit() {
+function handleSubmit() {
+  console.log('Form submit triggered')
+  
   if (!validateForm()) {
+    console.log('Validation failed, not submitting')
     return
   }
 
-  isLoading.value = true
-  try {
-    const params: ItineraryParams = {
-      destination: formData.destination.trim(),
-      days: formData.days,
-      budget: formData.budget,
-      preferences: formData.preferences.length > 0 ? formData.preferences : undefined
-    }
-    emit('submit', params)
-  } finally {
-    isLoading.value = false
+  console.log('Validation passed, emitting submit event')
+  const params: ItineraryParams = {
+    destination: formData.destination.trim(),
+    days: formData.days,
+    budget: formData.budget,
+    preferences: formData.preferences.length > 0 ? formData.preferences : undefined
   }
+  emit('submit', params)
 }
 </script>

@@ -170,7 +170,7 @@
 </template>
 
 <script setup lang="ts">
-import { ref, computed } from 'vue'
+import { ref, computed, watchEffect } from 'vue'
 import type { Itinerary } from '@/types'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
@@ -189,6 +189,23 @@ const emit = defineEmits<{
 
 const isCollected = ref(false)
 const savingCollection = ref(false)
+const collectionId = ref<string | null>(null)
+
+// Check if itinerary is already collected when component mounts
+watchEffect(async () => {
+  if (props.itinerary?._id) {
+    try {
+      const response = await collectionAPI.check(props.itinerary._id)
+      const data = (response.data as any).data
+      isCollected.value = data.isCollected
+      if (data.collection) {
+        collectionId.value = data.collection._id
+      }
+    } catch (error) {
+      console.error('Failed to check collection status:', error)
+    }
+  }
+})
 
 const totalAllocated = computed(() => {
   if (!props.itinerary) return 0
@@ -209,15 +226,17 @@ async function handleSaveCollection() {
 
   savingCollection.value = true
   try {
-    if (isCollected.value) {
+    if (isCollected.value && collectionId.value) {
       // Remove from collection
-      // Note: In a real app, you'd need to track the collection ID
-      // For now, we'll just toggle the UI state
+      await collectionAPI.remove(collectionId.value)
       isCollected.value = false
+      collectionId.value = null
     } else {
       // Add to collection
-      await collectionAPI.add(props.itinerary._id, 'itinerary')
+      const response = await collectionAPI.add(props.itinerary._id, 'itinerary')
+      const data = (response.data as any).data
       isCollected.value = true
+      collectionId.value = data._id
       emit('saved')
     }
   } catch (error) {

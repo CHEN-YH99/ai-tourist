@@ -115,12 +115,12 @@ export class CollectionService {
   }
 
   /**
-   * 检查是否已收藏
+   * 检查是否已收藏并返回收藏信息
    * 需求: 5.4
    */
-  async isCollected(userId: string, itemId: string): Promise<boolean> {
+  async getCollectionByItemId(userId: string, itemId: string): Promise<ICollection | null> {
     if (!mongoose.Types.ObjectId.isValid(itemId)) {
-      return false;
+      return null;
     }
 
     const collection = await Collection.findOne({
@@ -128,6 +128,15 @@ export class CollectionService {
       itemId: new mongoose.Types.ObjectId(itemId),
     });
 
+    return collection;
+  }
+
+  /**
+   * 检查是否已收藏
+   * 需求: 5.4
+   */
+  async isCollected(userId: string, itemId: string): Promise<boolean> {
+    const collection = await this.getCollectionByItemId(userId, itemId);
     return !!collection;
   }
 

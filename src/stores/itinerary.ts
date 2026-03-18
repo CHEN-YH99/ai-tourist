@@ -29,8 +29,10 @@ export const useItineraryStore = defineStore('itinerary', () => {
     generating.value = true;
     try {
       const response = await itineraryAPI.generate(params);
-      currentItinerary.value = response.data as Itinerary;
-      return response.data;
+      // Handle nested data structure from API
+      const itineraryData = (response.data as any).data || response.data;
+      currentItinerary.value = itineraryData as Itinerary;
+      return itineraryData;
     } catch (error) {
       console.error('Failed to generate itinerary:', error);
       throw error;
@@ -43,10 +45,12 @@ export const useItineraryStore = defineStore('itinerary', () => {
     loading.value = true;
     try {
       const response = await itineraryAPI.getList(page, pageSize);
-      const data = response.data as PaginatedResponse<Itinerary>;
-      itineraries.value = data.items;
+      // Handle nested data structure from API
+      const data = (response.data as any).data || response.data;
+      itineraries.value = data.items || [];
     } catch (error) {
       console.error('Failed to load itineraries:', error);
+      itineraries.value = [];
       throw error;
     } finally {
       loading.value = false;
@@ -57,7 +61,9 @@ export const useItineraryStore = defineStore('itinerary', () => {
     loading.value = true;
     try {
       const response = await itineraryAPI.getById(id);
-      currentItinerary.value = response.data as Itinerary;
+      // Handle nested data structure from API
+      const itineraryData = (response.data as any).data || response.data;
+      currentItinerary.value = itineraryData as Itinerary;
     } catch (error) {
       console.error('Failed to load itinerary:', error);
       throw error;
