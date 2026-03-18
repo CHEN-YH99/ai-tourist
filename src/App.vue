@@ -24,14 +24,16 @@
 import { onMounted } from 'vue'
 import { useToast } from '@/composables/useToast'
 import { setToastNotifier } from '@/api/client'
+import { useAuthStore } from '@/stores/auth'
 import Header from '@/components/Header.vue'
 import Sidebar from '@/components/Sidebar.vue'
 import ToastContainer from '@/components/ToastContainer.vue'
 
 const { error, warning } = useToast()
+const authStore = useAuthStore()
 
-// Initialize toast notifier for API client
-onMounted(() => {
+// Initialize toast notifier for API client and auth store
+onMounted(async () => {
   setToastNotifier((message: string, type: string, title?: string) => {
     if (type === 'error') {
       error(message, title)
@@ -39,6 +41,9 @@ onMounted(() => {
       warning(message, title)
     }
   })
+  
+  // Initialize auth store to fetch user profile if token exists
+  await authStore.initialize()
 })
 </script>
 

@@ -24,6 +24,7 @@ export const useAuthStore = defineStore('auth', () => {
   const token = ref<string | null>(localStorage.getItem('token'));
   const user = ref<UserProfile | null>(null);
   const loading = ref(false);
+  const initialized = ref(false);
 
   // Getters
   const isAuthenticated = computed(() => !!token.value && !!user.value);
@@ -34,11 +35,27 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     try {
       const response = await authAPI.login(credentials);
-      const data = response.data as AuthResponse;
-      token.value = data.token;
-      user.value = data.user;
-      localStorage.setItem('token', data.token);
-      return data;
+      console.log('Login response:', response);
+      
+      // Handle nested data structure from API
+      const authData = response.data?.data || response.data;
+      console.log('Auth data:', authData);
+      
+      if (!authData || !authData.token || !authData.user) {
+        throw new Error('Invalid response format');
+      }
+      
+      token.value = authData.token;
+      user.value = authData.user;
+      localStorage.setItem('token', authData.token);
+      
+      console.log('Auth store updated:', { 
+        token: !!token.value, 
+        user: user.value,
+        isAuthenticated: isAuthenticated.value 
+      });
+      
+      return authData;
     } finally {
       loading.value = false;
     }
@@ -48,10 +65,26 @@ export const useAuthStore = defineStore('auth', () => {
     loading.value = true;
     try {
       const response = await authAPI.register(data);
-      const authData = response.data as AuthResponse;
+      console.log('Register response:', response);
+      
+      // Handle nested data structure from API
+      const authData = response.data?.data || response.data;
+      console.log('Auth data:', authData);
+      
+      if (!authData || !authData.token || !authData.user) {
+        throw new Error('Invalid response format');
+      }
+      
       token.value = authData.token;
       user.value = authData.user;
       localStorage.setItem('token', authData.token);
+      
+      console.log('Auth store updated:', { 
+        token: !!token.value, 
+        user: user.value,
+        isAuthenticated: isAuthenticated.value 
+      });
+      
       return authData;
     } finally {
       loading.value = false;
@@ -68,18 +101,51 @@ export const useAuthStore = defineStore('auth', () => {
     if (!token.value) return;
     try {
       const response = await authAPI.getProfile();
-      user.value = response.data as UserProfile;
+      console.log('Fetch profile response:', response);
+      
+      // Handle nested data structure from API
+      const profileData = response.data?.data || response.data;
+      console.log('Profile data:', profileData);
+      
+      user.value = profileData as UserProfile;
     } catch (error) {
       console.error('Failed to fetch profile:', error);
+      // If token is invalid, clear it
+      token.value = null;
+      user.value = null;
+      localStorage.removeItem('token');
       throw error;
+    }
+  }
+
+  // Initialize user data if token exists
+  async function initialize() {
+    if (initialized.value) return;
+    initialized.value = true;
+    
+    console.log('Initializing auth store, token exists:', !!token.value);
+    
+    if (token.value && !user.value) {
+      try {
+        await fetchProfile();
+        console.log('Profile fetched successfully:', user.value);
+      } catch (error) {
+        console.error('Failed to initialize auth:', error);
+      }
+    } else {
+      console.log('Skip initialization:', { hasToken: !!token.value, hasUser: !!user.value });
     }
   }
 
   async function updateProfile(data: Partial<UserProfile>) {
     try {
       const response = await authAPI.updateProfile(data);
-      user.value = response.data as UserProfile;
-      return response.data;
+      
+      // Handle nested data structure from API
+      const profileData = response.data?.data || response.data;
+      user.value = profileData as UserProfile;
+      
+      return profileData;
     } catch (error) {
       console.error('Failed to update profile:', error);
       throw error;
@@ -96,6 +162,7 @@ export const useAuthStore = defineStore('auth', () => {
     register,
     logout,
     fetchProfile,
-    updateProfile
+    updateProfile,
+    initialize
   };
 });
