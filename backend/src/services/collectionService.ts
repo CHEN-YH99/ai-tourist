@@ -18,18 +18,25 @@ export class CollectionService {
     itemId: string,
     itemType: CollectionType
   ): Promise<ICollection> {
+    console.log('CollectionService.addToCollection 调用:', { userId, itemId, itemType });
+
     // 验证itemId格式
     if (!mongoose.Types.ObjectId.isValid(itemId)) {
+      console.log('无效的项目ID格式:', itemId);
       throw new Error('无效的项目ID');
     }
 
     // 验证项目是否存在
+    console.log('验证项目是否存在...');
     const itemExists = await this.verifyItemExists(itemId, itemType);
+    console.log('项目存在性检查结果:', itemExists);
+    
     if (!itemExists) {
       throw new Error(`${itemType === 'itinerary' ? '攻略' : '对话'}不存在`);
     }
 
     // 检查是否已收藏（幂等性处理）
+    console.log('检查是否已收藏...');
     const existing = await Collection.findOne({
       userId: new mongoose.Types.ObjectId(userId),
       itemId: new mongoose.Types.ObjectId(itemId),
@@ -37,10 +44,12 @@ export class CollectionService {
 
     if (existing) {
       // 已收藏，直接返回现有记录（幂等性）
+      console.log('已存在收藏记录，返回现有记录');
       return existing;
     }
 
     // 创建新收藏
+    console.log('创建新收藏记录...');
     const collection = new Collection({
       userId: new mongoose.Types.ObjectId(userId),
       itemId: new mongoose.Types.ObjectId(itemId),
@@ -48,6 +57,7 @@ export class CollectionService {
     });
 
     await collection.save();
+    console.log('收藏记录保存成功:', collection._id);
     return collection;
   }
 

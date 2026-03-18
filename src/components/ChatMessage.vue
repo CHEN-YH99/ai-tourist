@@ -169,9 +169,14 @@ async function handleGenerateItinerary() {
     const aiContent = props.message.content
     const params = extractItineraryParams(aiContent, userQuestion)
     
+    console.log('=== 攻略生成调试信息 ===')
     console.log('提取的参数:', params)
     console.log('用户提问:', userQuestion)
-    console.log('AI回答:', aiContent)
+    console.log('AI回答长度:', aiContent.length)
+    
+    // 将完整的AI回答保存到window对象，方便在控制台查看
+    ;(window as any).__lastAIContent = aiContent
+    console.log('💡 完整AI回答已保存，在控制台输入 window.__lastAIContent 查看')
     
     if (!params.destination) {
       // 如果无法提取目的地，让用户手动输入
@@ -182,37 +187,291 @@ async function handleGenerateItinerary() {
       params.destination = userDestination.trim()
     }
 
-    // 将AI回答内容解析为结构化攻略
-    // 方案1：尝试使用AI API进行结构化提取（推荐）
-    // 方案2：使用正则表达式解析（fallback）
-    let parsedItinerary
+    // 检查AI回答是否已经是JSON格式的攻略
+    const parsedItinerary = tryParseJsonItinerary(aiContent, params)
     
-    try {
-      // 尝试调用AI API进行结构化提取
-      parsedItinerary = await parseWithAI(aiContent, params)
-    } catch (error) {
-      console.log('AI解析失败，使用正则表达式解析:', error)
-      // fallback到正则表达式解析
-      parsedItinerary = parseAIContentToItinerary(aiContent, params)
+    if (parsedItinerary) {
+      // 如果已经是JSON格式，直接使用，不需要重新生成
+      console.log('检测到JSON格式攻略，直接使用，无需重新生成')
+      
+      // 设置为当前攻略
+      itineraryStore.setCurrentItinerary(parsedItinerary)
+      
+      // 添加到历史记录
+      itineraryStore.addToHistory(params, parsedItinerary)
+      
+      // 保存聊天上下文
+      itineraryStore.setItineraryFromChat({
+        params,
+        aiContent,
+        userQuestion
+      })
+      
+      console.log('攻略已解析，跳转到攻略页面')
+    } else {
+      // 如果不是JSON格式，调用后端API生成攻略
+      console.log('未检测到JSON格式，调用后端API生成攻略...')
+      await itineraryStore.generateItinerary(params)
+      
+      // 保存聊天上下文
+      itineraryStore.setItineraryFromChat({
+        params,
+        aiContent,
+        userQuestion
+      })
+      
+      console.log('攻略生成成功，跳转到攻略页面')
     }
-    
-    // 设置为当前攻略（直接显示，不调用API）
-    itineraryStore.setCurrentItinerary(parsedItinerary)
-    itineraryStore.setItineraryFromChat({
-      params,
-      aiContent,
-      userQuestion
-    })
     
     // 跳转到攻略生成页面
     router.push('/itinerary')
     
   } catch (error: any) {
     console.error('Failed to generate itinerary:', error)
-    const errorMessage = error.response?.data?.message || '生成攻略失败，请重试'
+    const errorMessage = error.response?.data?.message || error.message || '生成攻略失败，请重试'
     alert(errorMessage)
   } finally {
     generatingItinerary.value = false
+  }
+}
+
+// 尝试从AI回答中解析JSON格式的攻略
+function tryParseJsonItinerary(aiContent: string, params: any): any | null {
+  try {
+    console.log('=== 尝试解析JSON格式攻略 ===')
+    console.log('原始内容长度:', aiContent.length)
+    
+    // 尝试提取JSON（可能被包裹在代码块或其他文本中）
+    let jsonStr = ''
+    let extractMethod = ''
+    
+    // 方法1: 尝试匹配JSON代码块（优先级最高）
+    const jsonBlockMatch = aiContent.match(/```json\s*([\s\S]*?)\s*```/) || 
+                          aiContent.match(/```\s*([\s\S]*?)\s*```/)
+    
+    if (jsonBlockMatch) {
+      jsonStr = jsonBlockMatch[1]
+      extractMethod = '代码块'
+      console.log('从代码块中提取JSON')
+    } else {
+      // 方法2: 尝试找到最外层的大括号对
+      const firstBrace = aiContent.indexOf('{')
+      if (firstBrace !== -1) {
+        // 从第一个 { 开始，找到匹配的 }
+        let braceCount = 0
+        let inString = false
+        let escapeNext = false
+        let lastBrace = -1
+        
+        for (let i = firstBrace; i < aiContent.length; i++) {
+          const char = aiContent[i]
+          
+          if (escapeNext) {
+            escapeNext = false
+            continue
+          }
+          
+          if (char === '\\') {
+            escapeNext = true
+            continue
+          }
+          
+          if (char === '"' && !escapeNext) {
+            inString = !inString
+            continue
+          }
+          
+          if (!inString) {
+            if (char === '{') {
+              braceCount++
+            } else if (char === '}') {
+              braceCount--
+              if (braceCount === 0) {
+                lastBrace = i
+                break
+              }
+            }
+          }
+        }
+        
+        if (lastBrace !== -1) {
+          jsonStr = aiContent.substring(firstBrace, lastBrace + 1)
+          extractMethod = '大括号匹配'
+          console.log('从文本中提取JSON对象（大括号匹配）')
+        }
+      }
+    }
+    
+    if (!jsonStr) {
+      console.log('未找到JSON格式内容')
+      return null
+    }
+    
+    // 清理JSON字符串
+    jsonStr = jsonStr.trim()
+    
+    // 检查是否包含 days 关键字
+    if (!jsonStr.includes('"days"') && !jsonStr.includes("'days'")) {
+      console.log('JSON中未找到days字段')
+      return null
+    }
+    
+    console.log('提取方法:', extractMethod)
+    console.log('提取的JSON长度:', jsonStr.length)
+    console.log('JSON前100字符:', jsonStr.substring(0, 100))
+    
+    // 尝试解析JSON
+    let parsed
+    try {
+      parsed = JSON.parse(jsonStr)
+    } catch (parseError: any) {
+      console.log('JSON解析失败:', parseError.message)
+      
+      // 尝试修复常见的JSON问题
+      console.log('尝试修复JSON格式...')
+      
+      // 1. 移除尾部逗号
+      let fixedJson = jsonStr.replace(/,(\s*[}\]])/g, '$1')
+      
+      // 2. 替换单引号为双引号（但要小心字符串内容）
+      // fixedJson = fixedJson.replace(/'/g, '"')
+      
+      // 3. 移除注释
+      fixedJson = fixedJson.replace(/\/\/.*$/gm, '')
+      fixedJson = fixedJson.replace(/\/\*[\s\S]*?\*\//g, '')
+      
+      try {
+        parsed = JSON.parse(fixedJson)
+        console.log('JSON修复成功！')
+      } catch (fixError: any) {
+        console.log('JSON修复失败:', fixError.message)
+        
+        // 显示失败位置附近的内容以便调试
+        const errorPos = parseInt(fixError.message.match(/\d+/)?.[0] || '0')
+        const contextStart = Math.max(0, errorPos - 100)
+        const contextEnd = Math.min(fixedJson.length, errorPos + 100)
+        console.log('错误位置附近的内容:')
+        console.log(fixedJson.substring(contextStart, contextEnd))
+        console.log(' '.repeat(Math.min(100, errorPos - contextStart)) + '^')
+        
+        return null
+      }
+    }
+    
+    console.log('JSON解析成功:', parsed)
+    
+    // 验证是否是有效的攻略格式
+    if (!parsed.days || !Array.isArray(parsed.days) || parsed.days.length === 0) {
+      console.log('JSON格式不符合攻略结构：缺少days数组或days为空')
+      return null
+    }
+    
+    // 转换为Itinerary格式
+    const itinerary: any = {
+      _id: 'chat-' + Date.now(),
+      userId: authStore.user?.id || '',
+      destination: params.destination,
+      days: params.days,
+      budget: params.budget,
+      preferences: params.preferences || [],
+      content: [],
+      generatedAt: new Date(),
+      createdAt: new Date(),
+      updatedAt: new Date()
+    }
+    
+    // 转换每一天的数据
+    itinerary.content = parsed.days.map((day: any, index: number) => {
+      const dayPlan: any = {
+        day: day.day || day.Day || (index + 1),
+        activities: [],
+        meals: [],
+        accommodation: day.accommodation || day.Accommodation || day.hotel || day.Hotel || '当地酒店',
+        dailyBudget: Math.floor(params.budget / params.days)
+      }
+      
+      // 处理活动（支持多种字段名）
+      const activitiesData = day.activities || day.Activities || day.itinerary || day.Itinerary || []
+      if (Array.isArray(activitiesData)) {
+        dayPlan.activities = activitiesData.map((act: any) => ({
+          time: act.time || act.Time || act.startTime || act.StartTime || '09:00',
+          name: act.name || act.Name || act.title || act.Title || '活动',
+          description: act.description || act.Description || act.desc || act.Desc || '',
+          location: act.location || act.Location || act.place || act.Place || params.destination,
+          cost: act.cost || act.Cost || act.price || act.Price || 0,
+          duration: act.duration || act.Duration || act.time || '2小时'
+        }))
+      }
+      
+      // 处理餐饮（支持多种字段名）
+      const mealsData = day.meals || day.Meals || day.dining || day.Dining || day.food || day.Food || []
+      if (Array.isArray(mealsData)) {
+        dayPlan.meals = mealsData.map((meal: any) => {
+          // 处理餐饮类型
+          let mealType = (meal.type || meal.Type || meal.mealType || meal.MealType || 'lunch').toLowerCase()
+          // 标准化餐饮类型
+          if (mealType.includes('早') || mealType.includes('breakfast')) mealType = 'breakfast'
+          else if (mealType.includes('午') || mealType.includes('lunch')) mealType = 'lunch'
+          else if (mealType.includes('晚') || mealType.includes('dinner')) mealType = 'dinner'
+          
+          return {
+            type: mealType,
+            restaurant: meal.restaurant || meal.Restaurant || meal.place || meal.Place || '当地餐厅',
+            cuisine: meal.cuisine || meal.Cuisine || meal.food || meal.Food || '当地特色',
+            estimatedCost: meal.estimatedCost || meal.EstimatedCost || meal.cost || meal.Cost || meal.price || meal.Price || 50
+          }
+        })
+      }
+      
+      // 如果没有餐饮，添加默认值
+      if (dayPlan.meals.length === 0) {
+        dayPlan.meals = [
+          { type: 'breakfast', restaurant: '酒店早餐', cuisine: '当地特色', estimatedCost: Math.floor(dayPlan.dailyBudget * 0.1) },
+          { type: 'lunch', restaurant: '当地餐厅', cuisine: '当地特色', estimatedCost: Math.floor(dayPlan.dailyBudget * 0.15) },
+          { type: 'dinner', restaurant: '当地餐厅', cuisine: '当地特色', estimatedCost: Math.floor(dayPlan.dailyBudget * 0.15) }
+        ]
+      }
+      
+      return dayPlan
+    })
+    
+    // 确保天数匹配
+    if (itinerary.content.length !== params.days) {
+      console.log(`天数不匹配: 期望${params.days}天，实际${itinerary.content.length}天`)
+      // 如果天数不够，补充默认天数
+      while (itinerary.content.length < params.days) {
+        const dayNum = itinerary.content.length + 1
+        itinerary.content.push({
+          day: dayNum,
+          activities: [{
+            time: '09:00',
+            name: '自由活动',
+            description: '根据个人兴趣安排',
+            location: params.destination,
+            cost: 0,
+            duration: '全天'
+          }],
+          meals: [
+            { type: 'breakfast', restaurant: '酒店早餐', cuisine: '当地特色', estimatedCost: Math.floor(params.budget / params.days * 0.1) },
+            { type: 'lunch', restaurant: '当地餐厅', cuisine: '当地特色', estimatedCost: Math.floor(params.budget / params.days * 0.15) },
+            { type: 'dinner', restaurant: '当地餐厅', cuisine: '当地特色', estimatedCost: Math.floor(params.budget / params.days * 0.15) }
+          ],
+          accommodation: '当地酒店',
+          dailyBudget: Math.floor(params.budget / params.days)
+        })
+      }
+    }
+    
+    console.log('攻略转换成功:', itinerary)
+    return itinerary
+    
+  } catch (error) {
+    console.log('tryParseJsonItinerary 整体异常:', error)
+    if (error instanceof Error) {
+      console.log('错误详情:', error.message)
+      console.log('错误堆栈:', error.stack)
+    }
+    return null
   }
 }
 
@@ -465,6 +724,10 @@ function extractItineraryParams(aiContent: string, userQuestion: string = '') {
   return params
 }
 
+// 注意：以下两个函数已废弃，使用 tryParseJsonItinerary 替代
+// 保留代码以备将来参考
+
+/*
 // 使用AI API进行结构化提取
 async function parseWithAI(aiContent: string, params: any): Promise<any> {
   console.log('=== 使用AI API进行结构化提取 ===')
@@ -849,6 +1112,7 @@ function parseAIContentToItinerary(aiContent: string, params: any): any {
   
   return itinerary
 }
+*/
 </script>
 
 <style scoped>

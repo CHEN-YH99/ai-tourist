@@ -49,8 +49,11 @@ export async function addCollection(req: AuthRequest, res: Response): Promise<vo
     const userId = req.userId!;
     const { itemId, itemType } = req.body;
 
+    console.log('添加收藏请求:', { userId, itemId, itemType });
+
     // 验证必填字段
     if (!itemId || !itemType) {
+      console.log('缺少必填字段');
       res.status(400).json({
         status: 'error',
         message: '缺少必填字段：itemId 和 itemType',
@@ -60,6 +63,7 @@ export async function addCollection(req: AuthRequest, res: Response): Promise<vo
 
     // 验证itemType
     if (!['itinerary', 'conversation'].includes(itemType)) {
+      console.log('无效的收藏类型:', itemType);
       res.status(400).json({
         status: 'error',
         message: '无效的收藏类型',
@@ -73,17 +77,34 @@ export async function addCollection(req: AuthRequest, res: Response): Promise<vo
       itemType
     );
 
+    console.log('收藏添加成功:', collection);
+
     res.status(201).json({
       status: 'success',
       data: collection,
     });
   } catch (error: any) {
     console.error('添加收藏失败:', error);
+    console.error('错误详情:', {
+      message: error.message,
+      stack: error.stack,
+      name: error.name
+    });
     
     if (error.message.includes('不存在')) {
       res.status(404).json({
         status: 'error',
         message: error.message,
+        data: { error: error.message }
+      });
+      return;
+    }
+
+    if (error.message.includes('无效')) {
+      res.status(400).json({
+        status: 'error',
+        message: error.message,
+        data: { error: error.message }
       });
       return;
     }
@@ -91,6 +112,7 @@ export async function addCollection(req: AuthRequest, res: Response): Promise<vo
     res.status(500).json({
       status: 'error',
       message: '添加收藏失败',
+      data: { error: error.message || '未知错误' }
     });
   }
 }
