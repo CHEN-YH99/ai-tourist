@@ -75,6 +75,7 @@ import destinationRoutes from './routes/destinationRoutes.js';
 import collectionRoutes from './routes/collectionRoutes.js';
 import searchRoutes from './routes/searchRoutes.js';
 import itineraryRoutes from './routes/itineraryRoutes.js';
+import routeMapRoutes from './routes/routeMapRoutes.js';
 
 // API routes
 app.use('/api/auth', authRoutes);
@@ -84,6 +85,7 @@ app.use('/api/destinations', destinationRoutes);
 app.use('/api/collections', collectionRoutes);
 app.use('/api/search', searchRoutes);
 app.use('/api/itineraries', itineraryRoutes);
+app.use('/api/route-map', routeMapRoutes);
 
 // 404 handler
 app.use((_req: Request, res: Response) => {

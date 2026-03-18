@@ -150,6 +150,15 @@
     <!-- Action Buttons -->
     <div class="flex gap-3 sticky bottom-4">
       <Button
+        variant="success"
+        size="lg"
+        class="flex-1"
+        :loading="addingToDestination"
+        @click="handleAddToDestination"
+      >
+        添加到目的地
+      </Button>
+      <Button
         variant="primary"
         size="lg"
         class="flex-1"
@@ -171,10 +180,12 @@
 
 <script setup lang="ts">
 import { ref, computed, watchEffect } from 'vue'
+import { useRouter } from 'vue-router'
 import type { Itinerary } from '@/types'
 import Card from '@/components/ui/Card.vue'
 import Button from '@/components/ui/Button.vue'
 import { collectionAPI } from '@/api/collection'
+import { destinationAPI } from '@/api/destination'
 
 interface Props {
   itinerary: Itinerary | null
@@ -185,11 +196,14 @@ const props = defineProps<Props>()
 const emit = defineEmits<{
   regenerate: []
   saved: []
+  addedToDestination: []
 }>()
 
+const router = useRouter()
 const isCollected = ref(false)
 const savingCollection = ref(false)
 const collectionId = ref<string | null>(null)
+const addingToDestination = ref(false)
 
 // Check if itinerary is already collected when component mounts
 watchEffect(async () => {
@@ -283,5 +297,87 @@ function handleDownload() {
   document.body.appendChild(element)
   element.click()
   document.body.removeChild(element)
+}
+
+async function handleAddToDestination() {
+  if (!props.itinerary) return
+
+  addingToDestination.value = true
+  try {
+    // 从攻略中提取目的地信息
+    const attractions = props.itinerary.content.flatMap(day => 
+      day.activities.map(activity => ({
+        name: activity.name,
+        description: activity.description,
+        location: activity.location,
+        estimatedDuration: activity.duration,
+        recommendedTime: activity.time
+      }))
+    )
+
+    // 计算平均预算
+    const avgBudget = {
+      min: Math.floor(props.itinerary.budget * 0.8),
+      max: Math.ceil(props.itinerary.budget * 1.2),
+      currency: 'CNY'
+    }
+
+    // 根据偏好确定类型（使用有效的枚举值）
+    const typeMapping: Record<string, string> = {
+      '美食': '美食',
+      '文化': '文化',
+      '历史': '历史',
+      '自然': '自然',
+      '冒险': '冒险',
+      '购物': '购物',
+      '海滨': '海滨',
+      '现代': '现代'
+    }
+    
+    // 从偏好中提取有效的类型
+    const types = props.itinerary.preferences
+      .map(pref => typeMapping[pref])
+      .filter(Boolean)
+    
+    // 如果没有匹配的类型，使用默认值
+    if (types.length === 0) {
+      types.push('文化')
+    }
+
+    // 创建目的地数据
+    const destinationData = {
+      name: props.itinerary.destination,
+      region: '亚洲', // 默认值，可以根据实际情况调整
+      country: '中国', // 默认值
+      description: `${props.itinerary.days}天精彩行程，包含${attractions.length}个热门景点。${props.itinerary.preferences.join('、')}主题旅行。`,
+      images: ['/placeholder-destination.jpg'], // 默认图片
+      attractions: attractions.slice(0, 10).map(a => ({
+        name: a.name,
+        description: a.description
+      })), // 最多取10个景点，只保留必需字段
+      bestTimeToVisit: props.itinerary.preferences.includes('避开旺季') ? '淡季' : '全年',
+      averageBudget: avgBudget,
+      tips: [
+        `推荐行程天数：${props.itinerary.days}天`,
+        `预算范围：¥${avgBudget.min.toLocaleString()} - ¥${avgBudget.max.toLocaleString()}`,
+        ...props.itinerary.preferences.map(p => `适合${p}爱好者`)
+      ],
+      type: types
+    }
+
+    await destinationAPI.create(destinationData)
+    
+    alert(`成功添加"${props.itinerary.destination}"到目的地！`)
+    emit('addedToDestination')
+    
+    // 跳转到目的地页面
+    router.push('/destinations')
+  } catch (error: any) {
+    console.error('Failed to add to destination:', error)
+    const errorMessage = error.response?.data?.message || '添加到目的地失败，请重试'
+    alert(errorMessage)
+  } finally {
+    addingToDestination.value = false
+  }
 }
 </script>

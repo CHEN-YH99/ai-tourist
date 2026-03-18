@@ -149,6 +149,23 @@ export const useChatStore = defineStore('chat', () => {
     } as Conversation;
   }
 
+  function addMessage(message: Message) {
+    if (!currentConversation.value) {
+      currentConversation.value = {
+        _id: '',
+        messages: [],
+        createdAt: new Date(),
+        updatedAt: new Date()
+      } as Conversation;
+    }
+
+    if (!currentConversation.value.messages) {
+      currentConversation.value.messages = [];
+    }
+
+    currentConversation.value.messages.push(message);
+  }
+
   async function deleteConversation(id: string) {
     try {
       await chatAPI.deleteConversation(id);
@@ -171,6 +188,7 @@ export const useChatStore = defineStore('chat', () => {
     loadConversations,
     loadConversation,
     clearCurrentConversation,
+    addMessage,
     deleteConversation
   };
 });
