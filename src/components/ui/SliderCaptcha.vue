@@ -1,26 +1,26 @@
 <template>
   <div class="slider-captcha">
     <div class="captcha-container">
-      <!-- Background Image -->
-      <div class="captcha-image">
-        <img :src="backgroundImage" alt="验证背景" draggable="false" />
-        <!-- Puzzle Piece Slot -->
-        <div 
-          class="puzzle-slot" 
-          :style="{ left: puzzleX + 'px' }"
-        ></div>
-      </div>
+      <!-- Background Canvas -->
+      <canvas 
+        ref="backgroundCanvas" 
+        class="captcha-canvas"
+        width="300" 
+        height="150"
+      ></canvas>
       
-      <!-- Puzzle Piece -->
-      <div 
-        class="puzzle-piece" 
+      <!-- Puzzle Piece Canvas -->
+      <canvas 
+        ref="puzzleCanvas"
+        class="puzzle-canvas" 
         :style="{ 
           left: currentX + 'px',
-          opacity: isDragging || isVerified ? 1 : 0 
+          opacity: isDragging || isVerified ? 1 : 0,
+          width: (PUZZLE_WIDTH * scale) + 'px'
         }"
-      >
-        <img :src="puzzleImage" alt="拼图" draggable="false" />
-      </div>
+        width="60" 
+        height="150"
+      ></canvas>
 
       <!-- Status Overlay -->
       <div v-if="isVerified" class="status-overlay success">
@@ -83,25 +83,31 @@ const emit = defineEmits<{
 
 // Refs
 const trackRef = ref<HTMLElement>()
+const backgroundCanvas = ref<HTMLCanvasElement>()
+const puzzleCanvas = ref<HTMLCanvasElement>()
 const isDragging = ref(false)
 const currentX = ref(0)
 const startX = ref(0)
 const puzzleX = ref(0)
 const isVerified = ref(false)
 const showError = ref(false)
+const scale = ref(1) // Scale factor for canvas
 
-// Images - using placeholder images
-const backgroundImage = ref('https://picsum.photos/300/150?random=' + Math.random())
-const puzzleImage = ref('https://picsum.photos/60/150?random=' + Math.random())
-
-const TOLERANCE = 5 // Pixel tolerance for verification
+const TOLERANCE = 8 // Pixel tolerance for verification
+const PUZZLE_WIDTH = 60
+const CANVAS_WIDTH = 300
+const CANVAS_HEIGHT = 150
 
 onMounted(() => {
-  generatePuzzle()
+  initCaptcha()
   document.addEventListener('mousemove', onDrag)
   document.addEventListener('mouseup', stopDrag)
-  document.addEventListener('touchmove', onDrag)
+  document.addEventListener('touchmove', onDrag, { passive: false })
   document.addEventListener('touchend', stopDrag)
+  
+  // Calculate scale on mount and window resize
+  calculateScale()
+  window.addEventListener('resize', calculateScale)
 })
 
 onUnmounted(() => {
@@ -109,12 +115,150 @@ onUnmounted(() => {
   document.removeEventListener('mouseup', stopDrag)
   document.removeEventListener('touchmove', onDrag)
   document.removeEventListener('touchend', stopDrag)
+  window.removeEventListener('resize', calculateScale)
 })
 
-function generatePuzzle() {
+function calculateScale() {
+  if (!backgroundCanvas.value) return
+  const rect = backgroundCanvas.value.getBoundingClientRect()
+  scale.value = rect.width / CANVAS_WIDTH
+  console.log('Canvas scale:', scale.value, 'Canvas width:', rect.width, 'Logical width:', CANVAS_WIDTH)
+}
+
+function initCaptcha() {
+  const img = new Image()
+  img.crossOrigin = 'anonymous'
+  img.src = 'https://picsum.photos/300/150?random=' + Math.random()
+  
+  img.onload = () => {
+    drawCaptcha(img)
+    calculateScale()
+  }
+  
+  img.onerror = () => {
+    // Fallback: use a gradient if image fails to load
+    drawFallbackCaptcha()
+    calculateScale()
+  }
+}
+
+function drawCaptcha(img: HTMLImageElement) {
+  if (!backgroundCanvas.value || !puzzleCanvas.value) return
+  
+  const bgCtx = backgroundCanvas.value.getContext('2d')
+  const puzzleCtx = puzzleCanvas.value.getContext('2d')
+  
+  if (!bgCtx || !puzzleCtx) return
+  
+  // Clear canvases
+  bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  puzzleCtx.clearRect(0, 0, PUZZLE_WIDTH, CANVAS_HEIGHT)
+  
   // Generate random position for puzzle (between 40% and 80% of width)
-  const containerWidth = 300
-  puzzleX.value = Math.floor(containerWidth * 0.4 + Math.random() * (containerWidth * 0.4))
+  puzzleX.value = Math.floor(CANVAS_WIDTH * 0.4 + Math.random() * (CANVAS_WIDTH * 0.4))
+  console.log('Puzzle X position (logical):', puzzleX.value)
+  
+  // Draw background image
+  bgCtx.drawImage(img, 0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  
+  // Draw puzzle slot (darkened area)
+  bgCtx.fillStyle = 'rgba(0, 0, 0, 0.4)'
+  bgCtx.fillRect(puzzleX.value, 0, PUZZLE_WIDTH, CANVAS_HEIGHT)
+  
+  // Draw slot border
+  bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
+  bgCtx.lineWidth = 2
+  bgCtx.strokeRect(puzzleX.value, 0, PUZZLE_WIDTH, CANVAS_HEIGHT)
+  
+  // Extract puzzle piece from original image
+  puzzleCtx.drawImage(
+    img,
+    puzzleX.value, 0, PUZZLE_WIDTH, CANVAS_HEIGHT,  // Source rectangle
+    0, 0, PUZZLE_WIDTH, CANVAS_HEIGHT                // Destination rectangle
+  )
+  
+  // Add shadow to puzzle piece
+  puzzleCanvas.value.style.filter = 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))'
+}
+
+function drawFallbackCaptcha() {
+  if (!backgroundCanvas.value || !puzzleCanvas.value) return
+  
+  const bgCtx = backgroundCanvas.value.getContext('2d')
+  const puzzleCtx = puzzleCanvas.value.getContext('2d')
+  
+  if (!bgCtx || !puzzleCtx) return
+  
+  // Clear canvases
+  bgCtx.clearRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  puzzleCtx.clearRect(0, 0, PUZZLE_WIDTH, CANVAS_HEIGHT)
+  
+  puzzleX.value = Math.floor(CANVAS_WIDTH * 0.4 + Math.random() * (CANVAS_WIDTH * 0.4))
+  
+  // Draw gradient background
+  const gradient = bgCtx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  gradient.addColorStop(0, '#667eea')
+  gradient.addColorStop(1, '#764ba2')
+  bgCtx.fillStyle = gradient
+  bgCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+  
+  // Draw some random shapes for visual interest
+  for (let i = 0; i < 10; i++) {
+    bgCtx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.3})`
+    bgCtx.beginPath()
+    bgCtx.arc(
+      Math.random() * CANVAS_WIDTH,
+      Math.random() * CANVAS_HEIGHT,
+      Math.random() * 30 + 10,
+      0,
+      Math.PI * 2
+    )
+    bgCtx.fill()
+  }
+  
+  // Draw puzzle slot
+  bgCtx.fillStyle = 'rgba(0, 0, 0, 0.4)'
+  bgCtx.fillRect(puzzleX.value, 0, PUZZLE_WIDTH, CANVAS_HEIGHT)
+  bgCtx.strokeStyle = 'rgba(255, 255, 255, 0.8)'
+  bgCtx.lineWidth = 2
+  bgCtx.strokeRect(puzzleX.value, 0, PUZZLE_WIDTH, CANVAS_HEIGHT)
+  
+  // Copy the puzzle piece area before drawing the slot
+  const tempCanvas = document.createElement('canvas')
+  tempCanvas.width = CANVAS_WIDTH
+  tempCanvas.height = CANVAS_HEIGHT
+  const tempCtx = tempCanvas.getContext('2d')
+  if (tempCtx) {
+    // Redraw gradient without slot
+    const gradient2 = tempCtx.createLinearGradient(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    gradient2.addColorStop(0, '#667eea')
+    gradient2.addColorStop(1, '#764ba2')
+    tempCtx.fillStyle = gradient2
+    tempCtx.fillRect(0, 0, CANVAS_WIDTH, CANVAS_HEIGHT)
+    
+    // Copy shapes
+    for (let i = 0; i < 10; i++) {
+      tempCtx.fillStyle = `rgba(255, 255, 255, ${Math.random() * 0.3})`
+      tempCtx.beginPath()
+      tempCtx.arc(
+        Math.random() * CANVAS_WIDTH,
+        Math.random() * CANVAS_HEIGHT,
+        Math.random() * 30 + 10,
+        0,
+        Math.PI * 2
+      )
+      tempCtx.fill()
+    }
+    
+    // Extract puzzle piece
+    puzzleCtx.drawImage(
+      tempCanvas,
+      puzzleX.value, 0, PUZZLE_WIDTH, CANVAS_HEIGHT,
+      0, 0, PUZZLE_WIDTH, CANVAS_HEIGHT
+    )
+  }
+  
+  puzzleCanvas.value.style.filter = 'drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5))'
 }
 
 function startDrag(e: MouseEvent | TouchEvent) {
@@ -132,9 +276,10 @@ function onDrag(e: MouseEvent | TouchEvent) {
   
   e.preventDefault()
   const clientX = 'touches' in e ? e.touches[0].clientX : e.clientX
-  const trackWidth = trackRef.value?.offsetWidth || 300
+  const trackWidth = trackRef.value?.offsetWidth || CANVAS_WIDTH
   
   let newX = clientX - startX.value
+  // Limit movement to track width minus button width
   newX = Math.max(0, Math.min(newX, trackWidth - 40))
   
   currentX.value = newX
@@ -145,8 +290,20 @@ function stopDrag() {
   
   isDragging.value = false
   
+  // Convert currentX (screen pixels) to logical canvas pixels
+  const logicalX = currentX.value / scale.value
+  const logicalPuzzleX = puzzleX.value
+  
+  console.log('Verification:', {
+    currentX: currentX.value,
+    scale: scale.value,
+    logicalX: logicalX,
+    puzzleX: logicalPuzzleX,
+    difference: Math.abs(logicalX - logicalPuzzleX)
+  })
+  
   // Check if puzzle is in correct position
-  if (Math.abs(currentX.value - puzzleX.value) <= TOLERANCE) {
+  if (Math.abs(logicalX - logicalPuzzleX) <= TOLERANCE) {
     isVerified.value = true
     emit('verified')
   } else {
@@ -163,9 +320,7 @@ function refresh() {
   currentX.value = 0
   isVerified.value = false
   showError.value = false
-  backgroundImage.value = 'https://picsum.photos/300/150?random=' + Math.random()
-  puzzleImage.value = 'https://picsum.photos/60/150?random=' + Math.random()
-  generatePuzzle()
+  initCaptcha()
 }
 </script>
 
@@ -185,43 +340,19 @@ function refresh() {
   margin-bottom: 12px;
 }
 
-.captcha-image {
+.captcha-canvas {
+  display: block;
   width: 100%;
   height: 100%;
-  position: relative;
-}
-
-.captcha-image img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
   user-select: none;
 }
 
-.puzzle-slot {
+.puzzle-canvas {
   position: absolute;
   top: 0;
-  width: 60px;
-  height: 150px;
-  background: rgba(0, 0, 0, 0.3);
-  border: 2px solid rgba(255, 255, 255, 0.8);
-  box-shadow: inset 0 0 10px rgba(0, 0, 0, 0.5);
-}
-
-.puzzle-piece {
-  position: absolute;
-  top: 0;
-  width: 60px;
   height: 150px;
   transition: opacity 0.3s;
   pointer-events: none;
-}
-
-.puzzle-piece img {
-  width: 100%;
-  height: 100%;
-  object-fit: cover;
-  filter: drop-shadow(2px 2px 4px rgba(0, 0, 0, 0.5));
 }
 
 .status-overlay {
