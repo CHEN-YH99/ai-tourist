@@ -1157,8 +1157,69 @@ function parseAIContentToItinerary(aiContent: string, params: any): any {
 }
 
 .message.user .message-text {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 添加边框光条效果 */
+.message.user .message-text::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    #34d399,
+    #10b981,
+    #6ee7b7,
+    #a7f3d0,
+    #d1fae5,
+    #34d399
+  );
+  background-size: 400% 400%;
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0.6;
+  animation: userMessageGlow 3s ease infinite;
+}
+
+@keyframes userMessageGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 添加光效层 */
+.message.user .message-text::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: userMessageShine 2s ease-in-out infinite;
+}
+
+@keyframes userMessageShine {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 100%;
+  }
 }
 
 .message.assistant .message-text {

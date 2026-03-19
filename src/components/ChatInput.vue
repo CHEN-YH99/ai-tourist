@@ -165,16 +165,79 @@ function useTemplate(text: string) {
   justify-content: space-between;
   align-items: center;
   padding: 1rem 1.5rem;
-  border-bottom: 1px solid #e2e8f0;
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  border-bottom: 1px solid rgba(16, 185, 129, 0.2);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
   border-radius: 12px 12px 0 0;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 添加环绕边框动画 */
+.templates-header::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    #34d399,
+    #10b981,
+    #6ee7b7,
+    #a7f3d0,
+    #d1fae5,
+    #34d399
+  );
+  background-size: 400% 400%;
+  border-radius: 12px 12px 0 0;
+  z-index: -1;
+  animation: borderFlow 4s ease infinite;
+}
+
+@keyframes borderFlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 添加光效层 */
+.templates-header::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.3),
+    transparent
+  );
+  animation: shine 3s ease-in-out infinite;
+}
+
+@keyframes shine {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 100%;
+  }
 }
 
 .templates-header h4 {
   margin: 0;
   font-size: 1rem;
   font-weight: 600;
+  position: relative;
+  z-index: 1;
+  text-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
 }
 
 .close-btn {
@@ -190,11 +253,14 @@ function useTemplate(text: string) {
   align-items: center;
   justify-content: center;
   border-radius: 4px;
-  transition: background 0.2s;
+  transition: all 0.2s;
+  position: relative;
+  z-index: 1;
 }
 
 .close-btn:hover {
   background: rgba(255, 255, 255, 0.2);
+  transform: rotate(90deg);
 }
 
 .templates-list {
@@ -259,41 +325,82 @@ function useTemplate(text: string) {
   display: flex;
   gap: 0.75rem;
   padding: 1.5rem;
-  border-top: 1px solid #e2e8f0;
-  background: linear-gradient(to bottom, #ffffff, #f8fafc);
+  border-top: 1px solid rgba(16, 185, 129, 0.1);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   align-items: center;
-  box-shadow: 0 -2px 10px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 -4px 20px rgba(16, 185, 129, 0.15);
+  position: relative;
+  overflow: hidden;
+}
+
+/* 添加动态光效背景 */
+.input-area::before {
+  content: '';
+  position: absolute;
+  top: -50%;
+  left: -50%;
+  width: 200%;
+  height: 200%;
+  background: radial-gradient(
+    circle,
+    rgba(255, 255, 255, 0.1) 0%,
+    transparent 70%
+  );
+  animation: rotateGlow 10s linear infinite;
+  pointer-events: none;
+}
+
+@keyframes rotateGlow {
+  0% {
+    transform: rotate(0deg);
+  }
+  100% {
+    transform: rotate(360deg);
+  }
 }
 
 .template-toggle-btn {
-  background: white;
-  border: 2px solid #e2e8f0;
+  background: rgba(255, 255, 255, 0.95);
+  border: 2px solid rgba(255, 255, 255, 0.3);
   border-radius: 12px;
   padding: 0.75rem;
   cursor: pointer;
-  color: #718096;
+  color: #10b981;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
 .template-toggle-btn:hover {
-  background: #f7fafc;
-  border-color: #667eea;
-  color: #667eea;
-  transform: translateY(-2px);
-  box-shadow: 0 4px 8px rgba(102, 126, 234, 0.2);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 0.5);
+  color: #059669;
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
 }
 
 .template-toggle-btn.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
-  border-color: #667eea;
-  color: white;
-  transform: scale(1.05);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  background: rgba(255, 255, 255, 1);
+  border-color: rgba(255, 255, 255, 0.8);
+  color: #10b981;
+  transform: scale(1.1);
+  box-shadow: 0 4px 16px rgba(255, 255, 255, 0.4);
+  animation: pulse 2s ease-in-out infinite;
+}
+
+@keyframes pulse {
+  0%, 100% {
+    box-shadow: 0 4px 16px rgba(255, 255, 255, 0.4);
+  }
+  50% {
+    box-shadow: 0 4px 20px rgba(255, 255, 255, 0.6);
+  }
 }
 
 .template-toggle-btn svg {
@@ -304,20 +411,59 @@ function useTemplate(text: string) {
 .message-input {
   flex: 1;
   padding: 0.875rem 1.25rem;
-  border: 2px solid #e2e8f0;
+  border: 2px solid transparent;
   border-radius: 12px;
   font-size: 1rem;
   font-family: inherit;
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
-  background: white;
-  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.05);
+  background: linear-gradient(135deg, #f0fdf4 0%, #d1fae5 100%);
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.08);
+  position: relative;
+}
+
+/* 边框光条动画容器 */
+.message-input::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    #10b981,
+    #059669,
+    #34d399,
+    #6ee7b7,
+    #a7f3d0,
+    #10b981
+  );
+  background-size: 400% 400%;
+  border-radius: 12px;
+  z-index: -1;
+  opacity: 0;
+  transition: opacity 0.3s ease;
+  animation: borderGlow 3s ease infinite;
+}
+
+@keyframes borderGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
 }
 
 .message-input:focus {
   outline: none;
-  border-color: #667eea;
-  box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.15), 0 4px 8px rgba(0, 0, 0, 0.1);
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  box-shadow: 0 4px 16px rgba(16, 185, 129, 0.25), 0 0 0 4px rgba(16, 185, 129, 0.1);
   transform: translateY(-1px);
+}
+
+.message-input:focus::before {
+  opacity: 1;
 }
 
 .message-input:disabled {
@@ -336,13 +482,32 @@ function useTemplate(text: string) {
   white-space: nowrap;
   flex-shrink: 0;
   border-radius: 12px;
-  box-shadow: 0 2px 8px rgba(102, 126, 234, 0.3);
+  background: linear-gradient(135deg, #ffffff 0%, #f0fdf4 100%);
+  color: #10b981;
+  border: 2px solid rgba(255, 255, 255, 0.3);
+  font-weight: 600;
+  box-shadow: 0 4px 12px rgba(255, 255, 255, 0.3);
   transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
+  position: relative;
+  z-index: 1;
 }
 
 .send-button:hover:not(:disabled) {
-  transform: translateY(-2px);
-  box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 0 6px 20px rgba(255, 255, 255, 0.5);
+  background: linear-gradient(135deg, #ffffff 0%, #ffffff 100%);
+  border-color: rgba(255, 255, 255, 0.5);
+}
+
+.send-button:active:not(:disabled) {
+  transform: translateY(0) scale(0.98);
+}
+
+.send-button:disabled {
+  opacity: 0.5;
+  cursor: not-allowed;
+  transform: none;
 }
 
 @media (max-width: 768px) {

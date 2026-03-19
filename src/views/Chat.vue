@@ -378,20 +378,83 @@ async function scrollToBottom() {
   background: #f7fafc;
   border-radius: 8px;
   cursor: pointer;
-  transition: background 0.2s;
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
   display: flex;
   justify-content: space-between;
   align-items: center;
   gap: 0.5rem;
+  position: relative;
 }
 
 .conversation-item:hover {
-  background: #edf2f7;
+  background: #d1fae5;
+  transform: translateX(4px);
 }
 
 .conversation-item.active {
-  background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+  background: linear-gradient(135deg, #10b981 0%, #059669 100%);
   color: white;
+  position: relative;
+  overflow: hidden;
+}
+
+/* 添加边框光条效果 */
+.conversation-item.active::before {
+  content: '';
+  position: absolute;
+  top: -2px;
+  left: -2px;
+  right: -2px;
+  bottom: -2px;
+  background: linear-gradient(
+    45deg,
+    #34d399,
+    #10b981,
+    #6ee7b7,
+    #a7f3d0,
+    #d1fae5,
+    #34d399
+  );
+  background-size: 400% 400%;
+  border-radius: 8px;
+  z-index: -1;
+  opacity: 0.5;
+  animation: conversationGlow 3s ease infinite;
+}
+
+@keyframes conversationGlow {
+  0%, 100% {
+    background-position: 0% 50%;
+  }
+  50% {
+    background-position: 100% 50%;
+  }
+}
+
+/* 添加光效层 */
+.conversation-item.active::after {
+  content: '';
+  position: absolute;
+  top: 0;
+  left: -100%;
+  width: 100%;
+  height: 100%;
+  background: linear-gradient(
+    90deg,
+    transparent,
+    rgba(255, 255, 255, 0.2),
+    transparent
+  );
+  animation: conversationShine 2.5s ease-in-out infinite;
+}
+
+@keyframes conversationShine {
+  0% {
+    left: -100%;
+  }
+  50%, 100% {
+    left: 100%;
+  }
 }
 
 .conversation-title {
