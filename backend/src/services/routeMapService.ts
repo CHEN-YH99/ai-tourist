@@ -31,7 +31,10 @@ class RouteMapService {
   async generateRouteMap(params: RouteMapParams): Promise<RouteMapResponse> {
     if (!this.apiKey) {
       logger.warn('GEMINI_API_KEY is not configured, using fallback response');
-      return this.getFallbackResponse();
+      return {
+        message: this.getFallbackResponse(),
+        timestamp: new Date(),
+      };
     }
     const { content } = params;
 

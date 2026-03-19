@@ -1,8 +1,6 @@
 import openai from '../config/openai.js';
 import { logger } from '../utils/logger.js';
 import { aiQueue } from '../utils/aiQueue.js';
-import { retryWithBackoff, isRetryableError } from '../utils/retry.js';
-import { aiResponseCache, normalizeCacheKey } from '../utils/cache.js';
 import { Conversation, IConversation } from '../models/Conversation.js';
 import { Itinerary, IItinerary } from '../models/Itinerary.js';
 import { Destination } from '../models/Destination.js';

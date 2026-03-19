@@ -2,7 +2,6 @@ import { Response } from 'express';
 import { Itinerary } from '../models/Itinerary.js';
 import { AuthRequest } from '../middleware/auth.js';
 import { paginate } from '../utils/pagination.js';
-import { AppError } from '../middleware/errorHandler.js';
 
 /**
  * 获取攻略列表（分页）
