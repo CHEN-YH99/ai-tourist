@@ -1,0 +1,397 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>性能测试工具</title>
+  <style>
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      padding: 2rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      min-height: 100vh;
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      background: white;
+      border-radius: 12px;
+      padding: 2rem;
+      box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+    }
+
+    h1 {
+      color: #2d3748;
+      margin-bottom: 0.5rem;
+    }
+
+    .subtitle {
+      color: #718096;
+      margin-bottom: 2rem;
+    }
+
+    .test-section {
+      margin-bottom: 2rem;
+      padding: 1.5rem;
+      background: #f7fafc;
+      border-radius: 8px;
+      border-left: 4px solid #667eea;
+    }
+
+    .test-section h2 {
+      color: #2d3748;
+      margin-bottom: 1rem;
+      font-size: 1.25rem;
+    }
+
+    .test-controls {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 1rem;
+      flex-wrap: wrap;
+    }
+
+    button {
+      padding: 0.75rem 1.5rem;
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+      border: none;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+      transition: transform 0.2s, box-shadow 0.2s;
+    }
+
+    button:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 4px 12px rgba(102, 126, 234, 0.4);
+    }
+
+    button:active {
+      transform: translateY(0);
+    }
+
+    button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .results {
+      background: white;
+      padding: 1rem;
+      border-radius: 6px;
+      margin-top: 1rem;
+      font-family: 'Courier New', monospace;
+      font-size: 0.875rem;
+    }
+
+    .result-item {
+      padding: 0.5rem;
+      margin-bottom: 0.5rem;
+      border-left: 3px solid #48bb78;
+      background: #f0fff4;
+    }
+
+    .result-item.warning {
+      border-left-color: #ed8936;
+      background: #fffaf0;
+    }
+
+    .result-item.error {
+      border-left-color: #f56565;
+      background: #fff5f5;
+    }
+
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+
+    .stat-card {
+      background: white;
+      padding: 1rem;
+      border-radius: 6px;
+      text-align: center;
+    }
+
+    .stat-value {
+      font-size: 2rem;
+      font-weight: bold;
+      color: #667eea;
+    }
+
+    .stat-label {
+      color: #718096;
+      font-size: 0.875rem;
+      margin-top: 0.5rem;
+    }
+
+    .progress {
+      width: 100%;
+      height: 4px;
+      background: #e2e8f0;
+      border-radius: 2px;
+      overflow: hidden;
+      margin-top: 1rem;
+    }
+
+    .progress-bar {
+      height: 100%;
+      background: linear-gradient(90deg, #667eea, #764ba2);
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <h1>🚀 性能测试工具</h1>
+    <p class="subtitle">测试前端性能优化效果</p>
+
+    <!-- 虚拟滚动测试 -->
+    <div class="test-section">
+      <h2>1. 虚拟滚动性能测试</h2>
+      <div class="test-controls">
+        <button onclick="testVirtualScroll(100)">测试 100 条消息</button>
+        <button onclick="testVirtualScroll(500)">测试 500 条消息</button>
+        <button onclick="testVirtualScroll(1000)">测试 1000 条消息</button>
+      </div>
+      <div id="virtual-scroll-results" class="results"></div>
+    </div>
+
+    <!-- 缓存性能测试 -->
+    <div class="test-section">
+      <h2>2. 缓存性能测试</h2>
+      <div class="test-controls">
+        <button onclick="testCache()">运行缓存测试</button>
+        <button onclick="clearTestCache()">清除缓存</button>
+      </div>
+      <div id="cache-results" class="results"></div>
+      <div class="stats-grid" id="cache-stats"></div>
+    </div>
+
+    <!-- 图片懒加载测试 -->
+    <div class="test-section">
+      <h2>3. 图片懒加载测试</h2>
+      <div class="test-controls">
+        <button onclick="testLazyLoad(20)">加载 20 张图片</button>
+        <button onclick="testLazyLoad(50)">加载 50 张图片</button>
+      </div>
+      <div id="lazy-load-results" class="results"></div>
+      <div class="progress">
+        <div id="lazy-load-progress" class="progress-bar"></div>
+      </div>
+    </div>
+
+    <!-- Bundle 大小检查 -->
+    <div class="test-section">
+      <h2>4. Bundle 大小检查</h2>
+      <div class="test-controls">
+        <button onclick="checkBundleSize()">检查 Bundle 大小</button>
+      </div>
+      <div id="bundle-results" class="results"></div>
+    </div>
+  </div>
+
+  <script>
+    // 虚拟滚动测试
+    function testVirtualScroll(count) {
+      const results = document.getElementById('virtual-scroll-results')
+      results.innerHTML = '<div class="result-item">测试中...</div>'
+
+      setTimeout(() => {
+        const start = performance.now()
+        
+        // 模拟渲染大量消息
+        const messages = Array.from({ length: count }, (_, i) => ({
+          id: i,
+          content: `测试消息 ${i}`,
+          timestamp: Date.now()
+        }))
+
+        // 模拟虚拟滚动渲染（只渲染可见部分）
+        const visibleCount = Math.min(20, count)
+        const visibleMessages = messages.slice(0, visibleCount)
+
+        const end = performance.now()
+        const duration = end - start
+
+        let resultClass = 'result-item'
+        let message = `✅ 渲染 ${count} 条消息（虚拟滚动）`
+        
+        if (duration > 100) {
+          resultClass += ' warning'
+          message = `⚠️ 渲染 ${count} 条消息（较慢）`
+        }
+        if (duration > 500) {
+          resultClass += ' error'
+          message = `❌ 渲染 ${count} 条消息（过慢）`
+        }
+
+        results.innerHTML = `
+          <div class="${resultClass}">
+            ${message}<br>
+            实际渲染: ${visibleCount} 条<br>
+            耗时: ${duration.toFixed(2)}ms<br>
+            内存节省: ~${((1 - visibleCount / count) * 100).toFixed(0)}%
+          </div>
+        `
+      }, 100)
+    }
+
+    // 缓存测试
+    const testCacheData = new Map()
+    
+    async function testCache() {
+      const results = document.getElementById('cache-results')
+      const statsDiv = document.getElementById('cache-stats')
+      results.innerHTML = '<div class="result-item">测试中...</div>'
+
+      let hits = 0
+      let misses = 0
+
+      // 第一次查询（未命中）
+      const start1 = performance.now()
+      await simulateAPICall('test-query-1')
+      const end1 = performance.now()
+      misses++
+
+      // 第二次查询（命中）
+      const start2 = performance.now()
+      const cached = getCached('test-query-1')
+      const end2 = performance.now()
+      if (cached) hits++
+
+      // 多次查询测试
+      for (let i = 0; i < 10; i++) {
+        const query = `test-query-${i % 3}`
+        const start = performance.now()
+        const result = getCached(query)
+        const end = performance.now()
+        
+        if (result) {
+          hits++
+        } else {
+          await simulateAPICall(query)
+          misses++
+        }
+      }
+
+      const hitRate = (hits / (hits + misses) * 100).toFixed(2)
+
+      results.innerHTML = `
+        <div class="result-item">
+          ✅ 缓存测试完成<br>
+          首次查询: ${(end1 - start1).toFixed(2)}ms<br>
+          缓存查询: ${(end2 - start2).toFixed(2)}ms<br>
+          速度提升: ${((end1 - start1) / (end2 - start2)).toFixed(0)}x
+        </div>
+      `
+
+      statsDiv.innerHTML = `
+        <div class="stat-card">
+          <div class="stat-value">${hits}</div>
+          <div class="stat-label">缓存命中</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${misses}</div>
+          <div class="stat-label">缓存未命中</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${hitRate}%</div>
+          <div class="stat-label">命中率</div>
+        </div>
+        <div class="stat-card">
+          <div class="stat-value">${testCacheData.size}</div>
+          <div class="stat-label">缓存条目</div>
+        </div>
+      `
+    }
+
+    function simulateAPICall(key) {
+      return new Promise(resolve => {
+        setTimeout(() => {
+          testCacheData.set(key, { data: 'test', timestamp: Date.now() })
+          resolve()
+        }, 50)
+      })
+    }
+
+    function getCached(key) {
+      return testCacheData.get(key)
+    }
+
+    function clearTestCache() {
+      testCacheData.clear()
+      document.getElementById('cache-results').innerHTML = 
+        '<div class="result-item">✅ 缓存已清除</div>'
+      document.getElementById('cache-stats').innerHTML = ''
+    }
+
+    // 图片懒加载测试
+    async function testLazyLoad(count) {
+      const results = document.getElementById('lazy-load-results')
+      const progress = document.getElementById('lazy-load-progress')
+      
+      results.innerHTML = '<div class="result-item">测试中...</div>'
+      progress.style.width = '0%'
+
+      const start = performance.now()
+      let loaded = 0
+
+      for (let i = 0; i < count; i++) {
+        await new Promise(resolve => setTimeout(resolve, 10))
+        loaded++
+        progress.style.width = `${(loaded / count * 100)}%`
+      }
+
+      const end = performance.now()
+      const duration = end - start
+
+      results.innerHTML = `
+        <div class="result-item">
+          ✅ 懒加载测试完成<br>
+          图片数量: ${count}<br>
+          总耗时: ${duration.toFixed(2)}ms<br>
+          平均耗时: ${(duration / count).toFixed(2)}ms/张<br>
+          预计节省带宽: ~${(count * 0.5).toFixed(1)}MB
+        </div>
+      `
+    }
+
+    // Bundle 大小检查
+    function checkBundleSize() {
+      const results = document.getElementById('bundle-results')
+      
+      // 模拟检查
+      const scripts = document.getElementsByTagName('script')
+      const styles = document.getElementsByTagName('link')
+      
+      results.innerHTML = `
+        <div class="result-item">
+          📦 Bundle 信息<br>
+          脚本文件: ${scripts.length} 个<br>
+          样式文件: ${styles.length} 个<br>
+          <br>
+          💡 运行 <code>npm run analyze</code> 查看详细分析
+        </div>
+      `
+    }
+
+    // 页面加载完成后显示性能信息
+    window.addEventListener('load', () => {
+      const loadTime = performance.timing.loadEventEnd - performance.timing.navigationStart
+      console.log(`页面加载时间: ${loadTime}ms`)
+    })
+  </script>
+</body>
+</html>

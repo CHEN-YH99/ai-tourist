@@ -1,5 +1,6 @@
 import axios, { AxiosInstance, AxiosError, AxiosResponse } from 'axios'
 import type { ApiResponse } from '@/types'
+import { sanitizeAIContent } from '@/utils/sanitize'
 
 // Create axios instance
 const client: AxiosInstance = axios.create({

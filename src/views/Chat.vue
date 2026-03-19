@@ -11,11 +11,25 @@
         </div>
 
         <div v-else class="messages" ref="messagesContainer">
-          <ChatMessage
-            v-for="(msg, index) in (currentConversation.messages || [])"
-            :key="index"
-            :message="msg"
-          />
+          <RecycleScroller
+            v-if="(currentConversation.messages || []).length > 20"
+            :items="currentConversation.messages || []"
+            :item-size="120"
+            :buffer="300"
+            key-field="timestamp"
+            class="virtual-scroller"
+          >
+            <template #default="{ item }">
+              <ChatMessage :message="item" />
+            </template>
+          </RecycleScroller>
+          <template v-else>
+            <ChatMessage
+              v-for="(msg, index) in (currentConversation.messages || [])"
+              :key="index"
+              :message="msg"
+            />
+          </template>
           <div v-if="sending" class="message assistant">
             <div class="message-content">
               <span class="avatar">🤖</span>
@@ -100,6 +114,8 @@ import { useChatStore } from '@/stores/chat'
 import { useAuthStore } from '@/stores/auth'
 import ChatMessage from '@/components/ChatMessage.vue'
 import ChatInput from '@/components/ChatInput.vue'
+import { RecycleScroller } from 'vue-virtual-scroller'
+import 'vue-virtual-scroller/dist/vue-virtual-scroller.css'
 
 const chatStore = useChatStore()
 const authStore = useAuthStore()
@@ -261,6 +277,15 @@ async function scrollToBottom() {
   display: flex;
   flex-direction: column;
   gap: 0.5rem;
+}
+
+.virtual-scroller {
+  flex: 1;
+  min-height: 0;
+}
+
+.virtual-scroller :deep(.vue-recycle-scroller__item-wrapper) {
+  padding: 0.5rem 0;
 }
 
 .message {

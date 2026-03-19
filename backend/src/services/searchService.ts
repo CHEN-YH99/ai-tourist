@@ -3,6 +3,8 @@ import { Itinerary, IItinerary } from '../models/Itinerary.js';
 import { Conversation, IConversation } from '../models/Conversation.js';
 import { AppError } from '../middleware/errorHandler.js';
 import { logger } from '../utils/logger.js';
+import { sanitizeSearchQuery, escapeRegex } from '../utils/sanitize.js';
+import { searchCache, normalizeCacheKey } from '../utils/cache.js';
 
 export interface SearchFilters {
   type?: 'destination' | 'itinerary' | 'conversation';
@@ -42,12 +44,20 @@ export class SearchService {
     filters?: SearchFilters
   ): Promise<SearchResults> {
     try {
-      // 验证搜索词不为空
+      // 验证和清理搜索词
       if (!query || query.trim().length === 0) {
         throw new AppError(400, '搜索词不能为空');
       }
 
-      const trimmedQuery = query.trim();
+      const trimmedQuery = sanitizeSearchQuery(query);
+
+      // 检查缓存
+      const cacheKey = normalizeCacheKey('search', { query: trimmedQuery, userId, filters });
+      const cached = searchCache.get(cacheKey);
+      if (cached) {
+        logger.info(`Search cache hit for: "${trimmedQuery}"`);
+        return cached as SearchResults;
+      }
 
       // 执行并行搜索，带超时控制
       const [destinations, itineraries, conversations] = await withTimeout(
@@ -83,15 +93,20 @@ export class SearchService {
         filteredConversations.length;
 
       logger.info(
-        `Search completed for query: "${trimmedQuery}", results: ${total}`
+        `Search completed: ${total} results (destinations: ${filteredDestinations.length}, itineraries: ${filteredItineraries.length}, conversations: ${filteredConversations.length})`
       );
 
-      return {
+      const results = {
         destinations: filteredDestinations,
         itineraries: filteredItineraries,
         conversations: filteredConversations,
         total,
       };
+
+      // 缓存结果
+      searchCache.set(cacheKey, results);
+
+      return results;
     } catch (error) {
       if (error instanceof AppError) {
         throw error;
@@ -105,209 +120,129 @@ export class SearchService {
   }
 
   /**
-   * 搜索目的地
-   * 需求: 7.1, 7.3
+   * 搜索目的地（优化版本）
+   * 使用文本索引和安全的正则表达式
    */
   async searchDestinations(query: string): Promise<IDestination[]> {
     try {
-      const trimmedQuery = query.trim();
+      const escapedQuery = escapeRegex(query);
 
-      // 使用MongoDB文本搜索和模糊匹配
+      // 优先使用文本搜索索引
       const destinations = await Destination.find(
-        {
-          $or: [
-            { $text: { $search: trimmedQuery } },
-            { name: { $regex: trimmedQuery, $options: 'i' } },
-            { description: { $regex: trimmedQuery, $options: 'i' } },
-            { region: { $regex: trimmedQuery, $options: 'i' } },
-            { country: { $regex: trimmedQuery, $options: 'i' } },
-          ],
-        },
+        { $text: { $search: query } },
         { score: { $meta: 'textScore' } }
       )
         .sort({ score: { $meta: 'textScore' } })
         .limit(20)
+        .select('name nameEn region country type description images popularity averageBudget')
         .lean();
 
-      logger.info(
-        `Found ${destinations.length} destinations matching: "${trimmedQuery}"`
-      );
-      return destinations as unknown as IDestination[];
+      if (destinations.length > 0) {
+        logger.info(`Found ${destinations.length} destinations using text search`);
+        return destinations as unknown as IDestination[];
+      }
+
+      // 回退到正则搜索（使用转义后的查询）
+      const regexResults = await Destination.find({
+        $or: [
+          { name: { $regex: escapedQuery, $options: 'i' } },
+          { nameEn: { $regex: escapedQuery, $options: 'i' } },
+          { region: { $regex: escapedQuery, $options: 'i' } },
+          { country: { $regex: escapedQuery, $options: 'i' } },
+        ],
+      })
+        .limit(20)
+        .select('name nameEn region country type description images popularity averageBudget')
+        .lean();
+
+      logger.info(`Found ${regexResults.length} destinations using regex search`);
+      return regexResults as unknown as IDestination[];
     } catch (error) {
       logger.error('Error searching destinations:', error);
-      // 如果文本搜索失败，回退到简单的正则搜索
-      try {
-        const destinations = await Destination.find({
-          $or: [
-            { name: { $regex: query, $options: 'i' } },
-            { description: { $regex: query, $options: 'i' } },
-            { region: { $regex: query, $options: 'i' } },
-            { country: { $regex: query, $options: 'i' } },
-          ],
-        })
-          .limit(20)
-          .lean();
-
-        return destinations as unknown as IDestination[];
-      } catch (fallbackError) {
-        logger.error('Error in destination search fallback:', fallbackError);
-        return [];
-      }
+      return [];
     }
   }
 
   /**
-   * 搜索攻略（优先显示用户自己的）
-   * 需求: 7.1, 7.3, 7.7
+   * 搜索攻略（优化版本）
    */
   async searchItineraries(query: string, userId?: string): Promise<IItinerary[]> {
     try {
-      const trimmedQuery = query.trim();
-
+      const escapedQuery = escapeRegex(query);
+      
       // 构建查询条件
-      const searchCondition = {
+      const searchConditions: any = {
         $or: [
-          { $text: { $search: trimmedQuery } },
-          { destination: { $regex: trimmedQuery, $options: 'i' } },
-          { 'content.activities.name': { $regex: trimmedQuery, $options: 'i' } },
-          { 'content.activities.description': { $regex: trimmedQuery, $options: 'i' } },
+          { destination: { $regex: escapedQuery, $options: 'i' } },
+          { 'days.activities.name': { $regex: escapedQuery, $options: 'i' } },
         ],
       };
 
-      // 如果用户已登录，优先显示用户自己的攻略
-      let itineraries: any[] = [];
-
+      // 如果提供了userId，优先返回用户自己的攻略
       if (userId) {
-        // 先获取用户自己的攻略
-        const userItineraries = await Itinerary.find({
-          userId,
-          ...searchCondition,
-        })
-          .sort({ createdAt: -1 })
-          .limit(10)
-          .lean();
+        const [userItineraries, publicItineraries] = await Promise.all([
+          Itinerary.find({ ...searchConditions, userId })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('destination days budget preferences createdAt userId')
+            .lean(),
+          Itinerary.find({ ...searchConditions, userId: { $ne: userId } })
+            .sort({ createdAt: -1 })
+            .limit(10)
+            .select('destination days budget preferences createdAt userId')
+            .lean(),
+        ]);
 
-        // 再获取其他用户的攻略
-        const otherItineraries = await Itinerary.find({
-          userId: { $ne: userId },
-          ...searchCondition,
-        })
-          .limit(10)
-          .lean();
-
-        itineraries = [...userItineraries, ...otherItineraries];
-      } else {
-        // 未登录用户，直接搜索
-        itineraries = await Itinerary.find(searchCondition)
-          .sort({ createdAt: -1 })
-          .limit(20)
-          .lean();
+        const combined = [...userItineraries, ...publicItineraries].slice(0, 20);
+        logger.info(`Found ${combined.length} itineraries (${userItineraries.length} user's own)`);
+        return combined as unknown as IItinerary[];
       }
 
-      logger.info(
-        `Found ${itineraries.length} itineraries matching: "${trimmedQuery}"`
-      );
+      // 未登录用户只返回公开攻略
+      const itineraries = await Itinerary.find(searchConditions)
+        .sort({ createdAt: -1 })
+        .limit(20)
+        .select('destination days budget preferences createdAt userId')
+        .lean();
+
+      logger.info(`Found ${itineraries.length} public itineraries`);
       return itineraries as unknown as IItinerary[];
     } catch (error) {
       logger.error('Error searching itineraries:', error);
-      // 回退到简单搜索
-      try {
-        const searchCondition = {
-          $or: [
-            { destination: { $regex: query, $options: 'i' } },
-            { 'content.activities.name': { $regex: query, $options: 'i' } },
-            { 'content.activities.description': { $regex: query, $options: 'i' } },
-          ],
-        };
-
-        let itineraries: any[] = [];
-
-        if (userId) {
-          const userItineraries = await Itinerary.find({
-            userId,
-            ...searchCondition,
-          })
-            .sort({ createdAt: -1 })
-            .limit(10)
-            .lean();
-
-          const otherItineraries = await Itinerary.find({
-            userId: { $ne: userId },
-            ...searchCondition,
-          })
-            .limit(10)
-            .lean();
-
-          itineraries = [...userItineraries, ...otherItineraries];
-        } else {
-          itineraries = await Itinerary.find(searchCondition)
-            .sort({ createdAt: -1 })
-            .limit(20)
-            .lean();
-        }
-
-        return itineraries as unknown as IItinerary[];
-      } catch (fallbackError) {
-        logger.error('Error in itinerary search fallback:', fallbackError);
-        return [];
-      }
+      return [];
     }
   }
 
   /**
-   * 搜索对话（仅限用户自己的）
-   * 需求: 7.1, 7.3
+   * 搜索对话（优化版本）
    */
   async searchConversations(query: string, userId?: string): Promise<IConversation[]> {
     try {
-      // 未登录用户无法搜索对话
       if (!userId) {
-        return [];
+        return []; // 未登录用户无法搜索对话
       }
 
-      const trimmedQuery = query.trim();
+      const escapedQuery = escapeRegex(query);
 
-      // 搜索用户自己的对话
       const conversations = await Conversation.find({
         userId,
         $or: [
-          { $text: { $search: trimmedQuery } },
-          { title: { $regex: trimmedQuery, $options: 'i' } },
-          { 'messages.content': { $regex: trimmedQuery, $options: 'i' } },
+          { title: { $regex: escapedQuery, $options: 'i' } },
+          { 'messages.content': { $regex: escapedQuery, $options: 'i' } },
         ],
       })
-        .sort({ createdAt: -1 })
+        .sort({ updatedAt: -1 })
         .limit(20)
+        .select('title messages.role messages.content messages.timestamp createdAt updatedAt')
         .lean();
 
-      logger.info(
-        `Found ${conversations.length} conversations matching: "${trimmedQuery}"`
-      );
+      logger.info(`Found ${conversations.length} conversations for user`);
       return conversations as unknown as IConversation[];
     } catch (error) {
       logger.error('Error searching conversations:', error);
-      // 回退到简单搜索
-      try {
-        if (!userId) {
-          return [];
-        }
-
-        const conversations = await Conversation.find({
-          userId,
-          $or: [
-            { title: { $regex: query, $options: 'i' } },
-            { 'messages.content': { $regex: query, $options: 'i' } },
-          ],
-        })
-          .sort({ createdAt: -1 })
-          .limit(20)
-          .lean();
-
-        return conversations as unknown as IConversation[];
-      } catch (fallbackError) {
-        logger.error('Error in conversation search fallback:', fallbackError);
-        return [];
-      }
+      return [];
     }
   }
 }
+
+export const searchService = new SearchService();

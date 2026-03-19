@@ -61,7 +61,12 @@
           <div>
             <p class="text-xs text-gray-500 mb-1">平均预算</p>
             <p class="text-lg font-bold text-gray-900">
-              ¥{{ destination.averageBudget.min.toLocaleString() }}-{{ destination.averageBudget.max.toLocaleString() }}
+              <template v-if="destination.averageBudget?.min && destination.averageBudget?.max">
+                ¥{{ destination.averageBudget.min.toLocaleString() }}-{{ destination.averageBudget.max.toLocaleString() }}
+              </template>
+              <template v-else>
+                待定
+              </template>
             </p>
           </div>
           <Button

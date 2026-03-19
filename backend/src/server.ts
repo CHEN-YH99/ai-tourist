@@ -104,6 +104,10 @@ async function startServer() {
     // Connect to database
     await connectDatabase();
     
+    // Create database indexes
+    const { createIndexes } = await import('./models/indexes.js');
+    await createIndexes();
+    
     // Start listening
     app.listen(PORT, () => {
       logger.info(`Server is running on port ${PORT}`);
